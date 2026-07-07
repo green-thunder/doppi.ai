@@ -158,7 +158,7 @@ export function Hero() {
                   type="button"
                   disabled
                   aria-label={t.a11y.mute}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/[0.04] text-foreground/70"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-foreground/[0.05] text-foreground/70"
                 >
                   <Mic className="size-5" />
                 </button>

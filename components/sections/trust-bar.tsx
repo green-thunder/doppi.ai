@@ -29,7 +29,7 @@ export function TrustBar() {
                   <li
                     key={`${copy}-${i}`}
                     aria-hidden={copy === 1 || undefined}
-                    className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-white/[0.03] px-4 py-2 text-sm text-muted-foreground"
+                    className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-foreground/[0.04] px-4 py-2 text-sm text-muted-foreground"
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full bg-gold-400"

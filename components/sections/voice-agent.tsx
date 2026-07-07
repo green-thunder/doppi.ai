@@ -97,7 +97,7 @@ export function VoiceAgent() {
                   ) : (
                     <p
                       key={i}
-                      className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm border border-border bg-white/[0.04] px-4 py-2.5 text-sm leading-relaxed text-foreground/80"
+                      className="ml-auto max-w-[80%] rounded-2xl rounded-tr-sm border border-border bg-foreground/[0.05] px-4 py-2.5 text-sm leading-relaxed text-foreground/80"
                     >
                       {msg.text}
                     </p>

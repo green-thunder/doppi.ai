@@ -45,6 +45,8 @@ export interface SiteCopy {
     openMenu: string;
     closeMenu: string;
     switchLang: string;
+    lightMode: string;
+    darkMode: string;
   };
   nav: {
     links: { href: string; label: string }[];
@@ -176,6 +178,8 @@ const uz: SiteCopy = {
     openMenu: "Menyuni ochish",
     closeMenu: "Menyuni yopish",
     switchLang: "Ingliz tiliga o'tish",
+    lightMode: "Yorug' rejimga o'tish",
+    darkMode: "Tungi rejimga o'tish",
   },
   nav: {
     links: [
@@ -546,6 +550,8 @@ const en: SiteCopy = {
     openMenu: "Open menu",
     closeMenu: "Close menu",
     switchLang: "Switch to Uzbek",
+    lightMode: "Switch to light mode",
+    darkMode: "Switch to dark mode",
   },
   nav: {
     links: [

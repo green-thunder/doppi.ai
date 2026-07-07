@@ -15,27 +15,27 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // Brand tokens (mapped to CSS variables in globals.css)
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        card: "hsl(var(--card))",
-        "card-foreground": "hsl(var(--card-foreground))",
-        muted: "hsl(var(--muted))",
-        "muted-foreground": "hsl(var(--muted-foreground))",
-        border: "hsl(var(--border))",
-        ring: "hsl(var(--ring))",
-        // Warm gold scale — the doppi accent
+        // Brand tokens (mapped to CSS variables in globals.css; theme-aware)
+        background: "hsl(var(--background) / <alpha-value>)",
+        foreground: "hsl(var(--foreground) / <alpha-value>)",
+        card: "hsl(var(--card) / <alpha-value>)",
+        "card-foreground": "hsl(var(--card-foreground) / <alpha-value>)",
+        muted: "hsl(var(--muted) / <alpha-value>)",
+        "muted-foreground": "hsl(var(--muted-foreground) / <alpha-value>)",
+        border: "hsl(var(--border) / <alpha-value>)",
+        ring: "hsl(var(--ring) / <alpha-value>)",
+        // Warm gold scale — the doppi accent (var-driven so it flips per theme)
         gold: {
-          50: "#FBF3DF",
-          100: "#F7E7BD",
-          200: "#F1D488",
-          300: "#EBC157",
-          400: "#E9B63F",
-          500: "#E6A92C", // primary
-          600: "#C98E1E",
-          700: "#A5731A",
-          800: "#7C561A",
-          900: "#5A3F17",
+          50: "hsl(var(--g-50) / <alpha-value>)",
+          100: "hsl(var(--g-100) / <alpha-value>)",
+          200: "hsl(var(--g-200) / <alpha-value>)",
+          300: "hsl(var(--g-300) / <alpha-value>)",
+          400: "hsl(var(--g-400) / <alpha-value>)",
+          500: "hsl(var(--g-500) / <alpha-value>)",
+          600: "hsl(var(--g-600) / <alpha-value>)",
+          700: "hsl(var(--g-700) / <alpha-value>)",
+          800: "hsl(var(--g-800) / <alpha-value>)",
+          900: "hsl(var(--g-900) / <alpha-value>)",
         },
       },
       fontFamily: {
@@ -100,7 +100,12 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    ({ addVariant }: { addVariant: (name: string, def: string) => void }) => {
+      addVariant("light", ".light &");
+    },
+  ],
 };
 
 export default config;

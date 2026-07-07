@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n";
+import { ThemeProvider, themeInitScript } from "@/lib/theme";
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -67,7 +68,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0A0B",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAF6EE" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0A0B" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
@@ -115,6 +119,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="uz" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-dvh bg-background font-sans antialiased">
         <script
           type="application/ld+json"
@@ -126,7 +133,9 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <I18nProvider>{children}</I18nProvider>
+        <ThemeProvider>
+          <I18nProvider>{children}</I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

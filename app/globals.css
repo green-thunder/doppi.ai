@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @layer base {
+  /* ---- DARK (default) ---- */
   :root {
+    color-scheme: dark;
     --background: 240 6% 4%; /* #0A0A0B */
     --foreground: 40 30% 95%; /* #F6F4EF */
     --card: 240 6% 8%; /* #141417 */
@@ -12,6 +14,43 @@
     --muted-foreground: 240 5% 65%; /* ~#9E9EA6 */
     --border: 240 5% 17%; /* #26262B */
     --ring: 40 78% 54%; /* gold */
+
+    /* Gold scale (bright, for dark canvas) */
+    --g-50: 43 77% 93%;
+    --g-100: 43 78% 85%;
+    --g-200: 43 79% 74%;
+    --g-300: 43 79% 63%;
+    --g-400: 42 79% 58%;
+    --g-500: 40 79% 54%;
+    --g-600: 39 74% 45%;
+    --g-700: 38 73% 38%;
+    --g-800: 37 65% 29%;
+    --g-900: 36 59% 22%;
+  }
+
+  /* ---- LIGHT ---- */
+  .light {
+    color-scheme: light;
+    --background: 40 44% 96%; /* warm ivory */
+    --foreground: 28 16% 12%; /* warm near-black */
+    --card: 40 50% 99%; /* warm white */
+    --card-foreground: 28 16% 12%;
+    --muted: 40 30% 91%;
+    --muted-foreground: 34 12% 34%;
+    --border: 38 26% 84%;
+    --ring: 38 74% 40%; /* deep gold */
+
+    /* Gold scale (deepened so gold text clears WCAG AA 4.5:1 on ivory) */
+    --g-50: 40 55% 55%;
+    --g-100: 40 60% 48%;
+    --g-200: 39 68% 40%;
+    --g-300: 39 70% 37%;
+    --g-400: 38 72% 34%;
+    --g-500: 38 74% 32%;
+    --g-600: 37 76% 29%;
+    --g-700: 36 78% 25%;
+    --g-800: 36 72% 21%;
+    --g-900: 35 66% 17%;
   }
 
   * {
@@ -21,6 +60,8 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* Global zoom: scale the whole rem-based UI up by 40%. */
+    font-size: 140%;
   }
 
   body {
@@ -41,8 +82,8 @@
   }
 
   ::selection {
-    background: rgba(230, 169, 44, 0.28);
-    color: #fff;
+    background: hsl(var(--g-500) / 0.28);
+    color: hsl(var(--foreground));
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -87,5 +128,24 @@
     background: rgba(20, 20, 23, 0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* ---- Light-mode overrides for dark-canvas utilities ---- */
+  .light .text-gradient-gold {
+    background: linear-gradient(135deg, #c98e1e 0%, #a5731a 55%, #7c561a 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .light .bg-grid {
+    background-image:
+      linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  }
+
+  .light .glass {
+    background: rgba(255, 253, 248, 0.72);
   }
 }

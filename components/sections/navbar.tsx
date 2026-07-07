@@ -1,14 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme";
 import { Logo } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const { t, lang, toggle } = useI18n();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [scrolled, setScrolled] = React.useState(false);
   const [open, setOpen] = React.useState(false);
 
@@ -23,12 +25,23 @@ export function Navbar() {
     <button
       type="button"
       onClick={toggle}
-      className="inline-flex h-10 items-center gap-1.5 rounded-full border border-border bg-white/[0.03] px-3 text-xs font-semibold text-foreground/80 transition-colors hover:border-white/20 hover:text-foreground"
+      className="inline-flex h-10 items-center gap-1.5 rounded-full border border-border bg-foreground/[0.04] px-3 text-xs font-semibold text-foreground/80 transition-colors hover:border-foreground/20 hover:text-foreground"
       aria-label={t.a11y.switchLang}
     >
-      <span className={cn(lang === "uz" && "text-gold-400")}>UZ</span>
+      <span className={cn(lang === "uz" && "text-gold-500")}>UZ</span>
       <span className="text-muted-foreground">/</span>
-      <span className={cn(lang === "en" && "text-gold-400")}>EN</span>
+      <span className={cn(lang === "en" && "text-gold-500")}>EN</span>
+    </button>
+  );
+
+  const ThemeToggle = (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-foreground/[0.04] text-foreground/80 transition-colors hover:border-foreground/20 hover:text-foreground"
+      aria-label={theme === "dark" ? t.a11y.lightMode : t.a11y.darkMode}
+    >
+      {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
     </button>
   );
 
@@ -57,6 +70,7 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          {ThemeToggle}
           {LangToggle}
           <Button asChild size="sm">
             <a href="#contact">{t.nav.cta}</a>
@@ -65,13 +79,14 @@ export function Navbar() {
 
         {/* Mobile */}
         <div className="flex items-center gap-2 md:hidden">
+          {ThemeToggle}
           {LangToggle}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label={open ? t.a11y.closeMenu : t.a11y.openMenu}
             aria-expanded={open}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white/[0.03] text-foreground"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-foreground/[0.04] text-foreground"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -86,7 +101,7 @@ export function Navbar() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-3 text-base text-foreground/80 transition-colors hover:bg-white/[0.05] hover:text-foreground"
+                className="rounded-lg px-3 py-3 text-base text-foreground/80 transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
               >
                 {l.label}
               </a>

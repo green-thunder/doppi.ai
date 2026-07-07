@@ -11,8 +11,8 @@ const buttonVariants = cva(
         primary:
           "bg-gold-gradient text-[#0A0A0B] font-semibold shadow-gold-sm hover:shadow-gold hover:brightness-105 active:scale-[0.98]",
         secondary:
-          "border border-border bg-white/[0.03] text-foreground hover:bg-white/[0.07] hover:border-white/20 active:scale-[0.98]",
-        ghost: "text-foreground/80 hover:text-foreground hover:bg-white/[0.06]",
+          "border border-border bg-foreground/[0.04] text-foreground hover:bg-foreground/[0.08] hover:border-foreground/20 active:scale-[0.98]",
+        ghost: "text-foreground/80 hover:text-foreground hover:bg-foreground/[0.06]",
         outlineGold:
           "border border-gold-500/40 text-gold-300 hover:bg-gold-500/10 hover:border-gold-500/70 active:scale-[0.98]",
       },
