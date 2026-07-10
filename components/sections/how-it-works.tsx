@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { useCopy } from "@/lib/i18n";
 import {
@@ -15,6 +16,7 @@ import { Icon } from "@/components/icons";
 export function HowItWorks() {
   const t = useCopy();
   const steps = t.how.steps;
+  const reduce = useReducedMotion();
 
   return (
     <Section id="how" className="relative overflow-hidden">
@@ -38,10 +40,10 @@ export function HowItWorks() {
             const showConnector = (i + 1) % 4 !== 0 && i !== steps.length - 1;
             return (
               <Reveal as="li" key={step.title} delayIndex={i} className="relative">
-                <Card className="relative h-full p-6">
+                <Card className="group relative h-full p-6 transition-transform duration-300 hover:-translate-y-1 motion-reduce:transform-none">
                   {/* Faint left gold accent bar */}
                   <span
-                    className="absolute left-0 top-6 h-8 w-0.5 rounded bg-gold-500/40"
+                    className="absolute left-0 top-6 h-8 w-0.5 rounded bg-gold-500/40 transition-all duration-300 group-hover:h-12 group-hover:bg-gold-500/70"
                     aria-hidden="true"
                   />
 
@@ -49,7 +51,7 @@ export function HowItWorks() {
                     <span className="font-display text-sm font-semibold tabular-nums text-gold-400/70">
                       {String(i + 1).padStart(2, "0")}
                     </span>
-                    <span className="ml-auto grid size-10 place-items-center rounded-xl bg-gold-500/10 text-gold-400">
+                    <span className="ml-auto grid size-10 place-items-center rounded-xl bg-gold-500/10 text-gold-400 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 motion-reduce:transform-none">
                       <Icon name={step.icon} className="size-5" />
                     </span>
                   </div>
@@ -63,12 +65,25 @@ export function HowItWorks() {
                 </Card>
 
                 {showConnector ? (
-                  <span
-                    className="pointer-events-none absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 text-gold-500/40 lg:block"
-                    aria-hidden="true"
-                  >
-                    <ChevronRight className="size-5" strokeWidth={1.75} />
-                  </span>
+                  reduce ? (
+                    <span
+                      className="pointer-events-none absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 text-gold-500/40 lg:block"
+                      aria-hidden="true"
+                    >
+                      <ChevronRight className="size-5" strokeWidth={1.75} />
+                    </span>
+                  ) : (
+                    <motion.span
+                      className="pointer-events-none absolute -right-3 top-1/2 z-10 hidden text-gold-500/40 lg:block"
+                      aria-hidden="true"
+                      initial={{ opacity: 0, x: -4, y: "-50%" }}
+                      whileInView={{ opacity: 1, x: 0, y: "-50%" }}
+                      viewport={{ once: true, margin: "-80px" }}
+                      transition={{ delay: i * 0.06 + 0.2, duration: 0.4 }}
+                    >
+                      <ChevronRight className="size-5" strokeWidth={1.75} />
+                    </motion.span>
+                  )
                 ) : null}
               </Reveal>
             );

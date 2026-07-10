@@ -19,6 +19,13 @@ import {
   Target,
   Sparkles,
   ShieldCheck,
+  Linkedin,
+  Send,
+  Github,
+  Instagram,
+  Twitter,
+  Mail,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 
@@ -46,6 +53,13 @@ const iconMap: Record<string, LucideIcon> = {
   target: Target,
   sparkles: Sparkles,
   "shield-check": ShieldCheck,
+  linkedin: Linkedin,
+  telegram: Send,
+  github: Github,
+  instagram: Instagram,
+  twitter: Twitter,
+  mail: Mail,
+  globe: Globe,
 };
 
 export function Icon({

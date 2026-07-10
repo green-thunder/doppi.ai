@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Menu, X, Sun, Moon } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 export function Navbar() {
   const { t, lang, toggle } = useI18n();
   const { theme, toggle: toggleTheme } = useTheme();
+  const reduce = useReducedMotion();
   const [scrolled, setScrolled] = React.useState(false);
   const [open, setOpen] = React.useState(false);
 
@@ -46,15 +48,26 @@ export function Navbar() {
   );
 
   return (
-    <header
+    <motion.header
+      initial={reduce ? false : { y: -12, opacity: 0 }}
+      animate={reduce ? false : { y: 0, opacity: 1 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-all duration-300",
-        scrolled ? "border-b border-border glass" : "border-b border-transparent",
+        scrolled ? "border-b border-border glass shadow-gold-sm" : "border-b border-transparent",
       )}
     >
-      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 lg:px-8">
+      <nav
+        className={cn(
+          "mx-auto flex max-w-6xl items-center justify-between px-5 lg:px-8 transition-all duration-300",
+          scrolled ? "h-14" : "h-16",
+        )}
+      >
         <a href="#top" aria-label="Do'ppi.ai" className="shrink-0">
-          <Logo />
+          {/* Icon-only below sm so the row never overflows the mobile controls
+              at the 140% root font; full wordmark from sm up. */}
+          <Logo withWordmark={false} className="sm:hidden" />
+          <Logo className="hidden sm:inline-flex" />
         </a>
 
         <div className="hidden items-center gap-8 md:flex">
@@ -114,6 +127,6 @@ export function Navbar() {
           </div>
         </div>
       )}
-    </header>
+    </motion.header>
   );
 }

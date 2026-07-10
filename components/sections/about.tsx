@@ -7,10 +7,11 @@ import {
   SectionHeading,
   Reveal,
   GoldGlow,
+  InteractiveCard,
+  CountUp,
 } from "@/components/primitives";
-import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/icons";
-import { Medallion } from "@/components/brand";
+import { AnimatedMedallion } from "@/components/decor";
 
 export function About() {
   const t = useCopy();
@@ -42,9 +43,11 @@ export function About() {
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">
                     {fact.label}
                   </dt>
-                  <dd className="mt-1 font-display font-semibold text-foreground">
-                    {fact.value}
-                  </dd>
+                  <CountUp
+                    as="dd"
+                    value={fact.value}
+                    className="mt-1 font-display font-semibold text-foreground"
+                  />
                 </div>
               ))}
             </dl>
@@ -52,15 +55,13 @@ export function About() {
 
           {/* Right — differentiators */}
           <div className="relative">
-            <Medallion
-              className="pointer-events-none absolute -right-16 -top-10 hidden h-64 w-64 text-gold-500/10 lg:block"
-            />
+            <AnimatedMedallion className="-right-16 -top-10 hidden h-64 w-64 text-gold-500/10 lg:block" />
 
             <div className="relative flex flex-col gap-4">
               {t.about.points.map((point, i) => (
                 <Reveal key={point.title} delayIndex={i}>
-                  <Card className="flex items-start gap-4 p-5">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-gold-500/10 text-gold-400">
+                  <InteractiveCard className="p-5" contentClassName="flex items-start gap-4">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-gold-500/10 text-gold-400 transition-transform duration-300 group-hover:scale-110 motion-reduce:transform-none">
                       <Icon name={point.icon} className="size-5" />
                     </span>
                     <div>
@@ -71,7 +72,7 @@ export function About() {
                         {point.desc}
                       </p>
                     </div>
-                  </Card>
+                  </InteractiveCard>
                 </Reveal>
               ))}
             </div>

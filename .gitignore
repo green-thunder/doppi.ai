@@ -32,3 +32,4 @@ yarn-error.log*
 
 # Claude Code local skill/config (not part of app source)
 .claude/
+.zed/

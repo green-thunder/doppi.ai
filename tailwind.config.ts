@@ -88,6 +88,23 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "aurora-drift": {
+          "0%, 100%": { transform: "translate3d(-4%, -2%, 0) scale(1)" },
+          "33%": { transform: "translate3d(6%, 3%, 0) scale(1.08)" },
+          "66%": { transform: "translate3d(-3%, 5%, 0) scale(0.96)" },
+        },
+        "spin-slow": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        "spin-slow-rev": {
+          "0%": { transform: "rotate(360deg)" },
+          "100%": { transform: "rotate(0deg)" },
+        },
+        breathe: {
+          "0%, 100%": { opacity: "0.6" },
+          "50%": { opacity: "1" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.6s ease-out both",
@@ -97,6 +114,10 @@ const config: Config = {
         wave: "wave 1.1s ease-in-out infinite",
         "accordion-down": "accordion-down 0.25s ease-out",
         "accordion-up": "accordion-up 0.25s ease-out",
+        "aurora-drift": "aurora-drift 26s ease-in-out infinite",
+        "spin-slow": "spin-slow 90s linear infinite",
+        "spin-slow-rev": "spin-slow-rev 120s linear infinite",
+        breathe: "breathe 7s ease-in-out infinite",
       },
     },
   },

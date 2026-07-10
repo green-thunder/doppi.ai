@@ -3,14 +3,16 @@
 import { Mail, Phone, Globe, MapPin } from "lucide-react";
 import { useCopy } from "@/lib/i18n";
 import { Logo, OrnamentStrip } from "@/components/brand";
-import { Container } from "@/components/primitives";
+import { Container, Reveal } from "@/components/primitives";
 
 export function Footer() {
   const t = useCopy();
 
   return (
     <footer className="relative border-t border-border bg-background">
-      <OrnamentStrip className="opacity-60" />
+      <Reveal>
+        <OrnamentStrip className="opacity-60" />
+      </Reveal>
       <Container className="py-16">
         <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
           <div className="max-w-xs">

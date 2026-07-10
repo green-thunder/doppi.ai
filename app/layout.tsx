@@ -3,6 +3,8 @@ import { Space_Grotesk, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n";
 import { ThemeProvider, themeInitScript } from "@/lib/theme";
+import { ScrollProgress } from "@/components/scroll-progress";
+import { GrainOverlay } from "@/components/grain-overlay";
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -134,7 +136,11 @@ export default function RootLayout({
           Skip to content
         </a>
         <ThemeProvider>
-          <I18nProvider>{children}</I18nProvider>
+          <I18nProvider>
+            <ScrollProgress />
+            <GrainOverlay />
+            {children}
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

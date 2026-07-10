@@ -32,9 +32,9 @@ export function Problem() {
               key={item.title}
               as="li"
               delayIndex={i}
-              className="group flex items-start gap-4 rounded-2xl border border-border bg-card/40 p-5 transition-colors hover:border-foreground/15"
+              className="group flex items-start gap-4 rounded-2xl border border-border bg-card/40 p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-card motion-reduce:hover:translate-y-0"
             >
-              <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-300 transition-colors group-hover:bg-red-500/15 light:text-red-600">
+              <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-300 transition-transform duration-300 group-hover:scale-110 group-hover:bg-red-500/15 motion-reduce:transform-none light:text-red-600">
                 <Icon name={item.icon} className="size-5" strokeWidth={1.75} />
               </span>
 

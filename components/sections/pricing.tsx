@@ -1,11 +1,17 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { useCopy } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Container, Section, SectionHeading, Reveal, GoldGlow } from "@/components/primitives";
+import {
+  Container,
+  Section,
+  SectionHeading,
+  Reveal,
+  GoldGlow,
+  InteractiveCard,
+  CountUp,
+} from "@/components/primitives";
 
 export function Pricing() {
   const t = useCopy();
@@ -24,19 +30,25 @@ export function Pricing() {
 
         <div className="mt-14 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 lg:grid-cols-4">
           {t.pricing.tiers.map((tier, i) => (
-            <Reveal key={tier.id} delayIndex={i}>
+            <Reveal key={tier.id} delayIndex={i} className={tier.popular ? "relative" : undefined}>
               {tier.popular ? (
-                <div className="relative flex h-full flex-col rounded-2xl border border-gold-500/50 bg-card p-6 shadow-gold">
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <Badge>{t.pricing.popularLabel}</Badge>
-                  </div>
-                  <PricingBody tier={tier} />
+                <div className="absolute -top-3.5 left-1/2 z-20 -translate-x-1/2">
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-gold-gradient px-3.5 py-1 text-xs font-semibold text-[#0A0A0B] shadow-[0_4px_16px_-4px_rgba(230,169,44,0.55)]">
+                    <Sparkles className="size-3" strokeWidth={2.5} aria-hidden="true" />
+                    {t.pricing.popularLabel}
+                  </span>
                 </div>
-              ) : (
-                <Card className="flex h-full flex-col p-6">
-                  <PricingBody tier={tier} />
-                </Card>
-              )}
+              ) : null}
+              <InteractiveCard
+                className={
+                  tier.popular
+                    ? "h-full border-gold-500/50 bg-card p-6 shadow-gold ring-1 ring-gold-500/20"
+                    : "h-full p-6"
+                }
+                contentClassName="flex h-full flex-col"
+              >
+                <PricingBody tier={tier} />
+              </InteractiveCard>
             </Reveal>
           ))}
         </div>
@@ -61,9 +73,10 @@ function PricingBody({
       </h3>
 
       <div className="mt-4 flex items-baseline gap-1">
-        <span className="font-display text-4xl font-bold text-foreground">
-          {tier.price}
-        </span>
+        <CountUp
+          value={tier.price}
+          className="font-display text-4xl font-bold text-foreground"
+        />
         {tier.period ? (
           <span className="text-sm text-muted-foreground">{tier.period}</span>
         ) : null}

@@ -4,27 +4,99 @@ import * as React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Play, Phone, Mic, PhoneOff } from "lucide-react";
 import { useCopy } from "@/lib/i18n";
+import { useCountUpTimer, useTypewriter, useInViewLoop } from "@/lib/hooks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Container, GoldGlow } from "@/components/primitives";
-import { Medallion } from "@/components/brand";
+import { Container, CountUp } from "@/components/primitives";
+import { AuroraBackdrop, AnimatedMedallion } from "@/components/decor";
 
 function Waveform() {
   const reduce = useReducedMotion();
   const bars = [0.4, 0.7, 1, 0.6, 0.85, 0.5, 0.9, 0.65, 1, 0.55, 0.8, 0.45, 0.7, 0.95, 0.5];
   return (
     <div className="flex h-14 items-center justify-center gap-[3px]" aria-hidden="true">
-      {bars.map((h, i) => (
-        <span
-          key={i}
-          className="w-[3px] rounded-full bg-gold-gradient"
-          style={{
-            height: `${h * 100}%`,
-            animation: reduce ? undefined : `wave 1.1s ease-in-out ${i * 0.06}s infinite`,
-            transformOrigin: "center",
-          }}
-        />
-      ))}
+      {bars.map((h, i) => {
+        // Varied per-bar duration so the crest travels — reads as live audio.
+        const dur = 0.8 + (i % 5) * 0.12;
+        return (
+          <span
+            key={i}
+            className="w-[3px] rounded-full bg-gold-400"
+            style={{
+              height: `${h * 100}%`,
+              animation: reduce ? undefined : `wave ${dur}s ease-in-out ${i * 0.06}s infinite`,
+              transformOrigin: "center",
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/** The AI voice-agent call card — a self-contained looping "live call" demo. */
+function LiveCallCard({ t }: { t: ReturnType<typeof useCopy> }) {
+  const reduce = useReducedMotion();
+  const ref = React.useRef<HTMLDivElement>(null);
+  const inView = useInViewLoop(ref);
+  const clock = useCountUpTimer({ active: inView, reduce });
+  const { text: caption, done } = useTypewriter(t.hero.agentCaption, {
+    active: inView,
+    reduce,
+    loop: true,
+    holdMs: 2600,
+  });
+
+  return (
+    <div ref={ref} className="rounded-[1.75rem] border border-border bg-card/70 p-6 shadow-card backdrop-blur">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-gold-500/15 text-gold-300">
+            <span className="absolute inset-0 animate-pulse-ring rounded-full border border-gold-500/50" aria-hidden="true" />
+            <Phone className="size-5" />
+          </span>
+          <div>
+            <p className="font-display text-sm font-semibold text-foreground">
+              {t.hero.agentName}
+            </p>
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              {t.hero.agentStatus}
+            </p>
+          </div>
+        </div>
+        <span className="font-mono text-xs tabular-nums text-muted-foreground">{clock}</span>
+      </div>
+
+      <div className="my-6 rounded-2xl border border-border bg-background/60 p-4">
+        <Waveform />
+      </div>
+
+      <p className="min-h-[2.75rem] text-center text-sm leading-relaxed text-muted-foreground">
+        {caption}
+        {!done && !reduce ? (
+          <span className="ml-0.5 inline-block h-4 w-px translate-y-0.5 animate-pulse bg-gold-400 align-middle" aria-hidden="true" />
+        ) : null}
+      </p>
+
+      <div className="mt-6 flex items-center justify-center gap-4">
+        <button
+          type="button"
+          disabled
+          aria-label={t.a11y.mute}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-foreground/[0.05] text-foreground/70"
+        >
+          <Mic className="size-5" />
+        </button>
+        <button
+          type="button"
+          disabled
+          aria-label={t.a11y.endCall}
+          className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-500/90 p-3 text-white shadow-lg"
+        >
+          <PhoneOff className="size-5" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -36,9 +108,8 @@ export function Hero() {
     <section id="top" className="relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24">
       {/* Background layers */}
       <div className="pointer-events-none absolute inset-0 bg-grid mask-fade-b opacity-70" aria-hidden="true" />
-      <div className="pointer-events-none absolute inset-0 bg-radial-fade" aria-hidden="true" />
-      <GoldGlow className="left-1/2 top-[-6rem] h-72 w-[36rem] -translate-x-1/2" />
-      <Medallion className="pointer-events-none absolute -right-24 top-10 hidden h-[28rem] w-[28rem] text-gold-500/10 lg:block" />
+      <AuroraBackdrop />
+      <AnimatedMedallion className="-right-24 top-10 hidden h-[28rem] w-[28rem] text-gold-500/10 lg:block" />
 
       <Container className="relative">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
@@ -106,9 +177,11 @@ export function Hero() {
             >
               {t.hero.stats.map((s) => (
                 <div key={s.label}>
-                  <dt className="font-display text-2xl font-bold text-gradient-gold sm:text-3xl">
-                    {s.value}
-                  </dt>
+                  <CountUp
+                    as="dt"
+                    value={s.value}
+                    className="font-display text-2xl font-bold text-gradient-gold sm:text-3xl"
+                  />
                   <dd className="mt-1 text-xs leading-snug text-muted-foreground sm:text-sm">
                     {s.label}
                   </dd>
@@ -125,53 +198,7 @@ export function Hero() {
             className="relative mx-auto w-full max-w-sm"
           >
             <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gold-500/10 blur-3xl" aria-hidden="true" />
-            <div className="rounded-[1.75rem] border border-border bg-card/70 p-6 shadow-card backdrop-blur">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-gold-500/15 text-gold-300">
-                    <span className="absolute inset-0 animate-pulse-ring rounded-full border border-gold-500/50" aria-hidden="true" />
-                    <Phone className="size-5" />
-                  </span>
-                  <div>
-                    <p className="font-display text-sm font-semibold text-foreground">
-                      {t.hero.agentName}
-                    </p>
-                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                      {t.hero.agentStatus}
-                    </p>
-                  </div>
-                </div>
-                <span className="font-mono text-xs tabular-nums text-muted-foreground">00:24</span>
-              </div>
-
-              <div className="my-6 rounded-2xl border border-border bg-background/60 p-4">
-                <Waveform />
-              </div>
-
-              <p className="text-center text-sm leading-relaxed text-muted-foreground">
-                {t.hero.agentCaption}
-              </p>
-
-              <div className="mt-6 flex items-center justify-center gap-4">
-                <button
-                  type="button"
-                  disabled
-                  aria-label={t.a11y.mute}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-foreground/[0.05] text-foreground/70"
-                >
-                  <Mic className="size-5" />
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  aria-label={t.a11y.endCall}
-                  className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-500/90 p-3 text-white shadow-lg"
-                >
-                  <PhoneOff className="size-5" />
-                </button>
-              </div>
-            </div>
+            <LiveCallCard t={t} />
           </motion.div>
         </div>
       </Container>
