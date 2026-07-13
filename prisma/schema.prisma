@@ -1,0 +1,25 @@
+// Prisma schema for the Do'ppi.ai content backend.
+//
+// Content is modelled as one row per top-level section (e.g. "hero", "pricing",
+// "team") per language. Each row's `data` holds that section's subtree as JSON,
+// mirroring the `SiteCopy` shape in lib/content.ts. Rows are seeded from
+// content.ts (npm run db:seed) and edited through the /admin panel.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Section {
+  key       String // top-level SiteCopy key, e.g. "hero", "team", "pricing"
+  lang      String // "uz" | "en"
+  data      Json // the section's subtree, shape-compatible with SiteCopy[key]
+  updatedAt DateTime @updatedAt @default(now())
+
+  @@id([key, lang])
+  @@map("sections")
+}
