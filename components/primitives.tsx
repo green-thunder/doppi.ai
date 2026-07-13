@@ -201,7 +201,7 @@ export function GoldGlow({ className }: { className?: string }) {
     <div
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute rounded-full bg-gold-500/20 blur-[120px]",
+        "decor-glow pointer-events-none absolute rounded-full bg-gold-500/20 blur-[120px]",
         className,
       )}
     />

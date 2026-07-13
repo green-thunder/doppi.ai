@@ -19,13 +19,13 @@ export function AuroraBackdrop({ className }: { className?: string }) {
       <div className="absolute inset-0 bg-aurora mask-fade-b" />
       <div
         className={cn(
-          "absolute left-[10%] top-[-8rem] h-72 w-[34rem] rounded-full bg-gold-500/20 blur-[120px]",
+          "decor-glow absolute left-[10%] top-[-8rem] h-72 w-[34rem] rounded-full bg-gold-500/20 blur-[120px]",
           !reduce && "animate-aurora-drift will-change-transform",
         )}
       />
       <div
         className={cn(
-          "absolute right-[6%] top-[2rem] h-64 w-[28rem] rounded-full bg-gold-300/15 blur-[130px]",
+          "decor-glow absolute right-[6%] top-[2rem] h-64 w-[28rem] rounded-full bg-gold-300/15 blur-[130px]",
           !reduce && "animate-aurora-drift [animation-delay:-13s] will-change-transform",
         )}
       />

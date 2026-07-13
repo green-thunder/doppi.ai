@@ -491,14 +491,13 @@ const uz: SiteCopy = {
     // tahrirlang. `en` tarmog'ida ham xuddi shunday o'zgartiring (TS parity talab qiladi).
     members: [
       {
-        name: "Abdumalikov Aziz",
-        role: "AI muhandis",
-        bio: "AI modellari ustida ishlaydi",
-        initials: "AA",
-        image: "/team/abdumalikov_a.jpg",
+        name: "Rifat Mamayusupov",
+        role: "O'sish bo'yicha rahbar",
+        bio: "Marketing va mijozlar bilan ishlashni boshqaradi. Bizneslarni Do'ppi.ai bilan o'sishga yo'naltiradi.",
+        initials: "RM",
         socials: [
-          { icon: "linkedin", href: "https://www.linkedin.com/in/abdumalikov/", label: "LinkedIn" },
-          { icon: "telegram", href: "#", label: "Telegram" },
+          { icon: "linkedin", href: "#", label: "LinkedIn" },
+          { icon: "instagram", href: "#", label: "Instagram" },
         ],
       },
       {
@@ -521,13 +520,14 @@ const uz: SiteCopy = {
         socials: [{ icon: "linkedin", href: "https://www.linkedin.com/in/nodirbek-kamalov", label: "LinkedIn" }],
       },
       {
-        name: "Rifat Mamayusupov",
-        role: "O'sish bo'yicha rahbar",
-        bio: "Marketing va mijozlar bilan ishlashni boshqaradi. Bizneslarni Do'ppi.ai bilan o'sishga yo'naltiradi.",
-        initials: "RM",
+        name: "Abdumalikov Aziz",
+        role: "AI muhandis",
+        bio: "AI modellari ustida ishlaydi",
+        initials: "AA",
+        image: "/team/abdumalikov_a.jpg",
         socials: [
-          { icon: "linkedin", href: "#", label: "LinkedIn" },
-          { icon: "instagram", href: "#", label: "Instagram" },
+          { icon: "linkedin", href: "https://www.linkedin.com/in/abdumalikov/", label: "LinkedIn" },
+          { icon: "telegram", href: "#", label: "Telegram" },
         ],
       },
     ],
@@ -915,14 +915,13 @@ const en: SiteCopy = {
     // matching change in the `uz` tree above (TS enforces UZ/EN parity).
     members: [
       {
-        name: "Abdumalikov Aziz",
-        role: "AI Engineer",
-        bio: "Works on the platform's AI models.",
-        initials: "AA",
-        image: "/team/abdumalikov_a.jpg",
+        name: "Rifat Mamayusupov",
+        role: "Head of Growth",
+        bio: "Leads marketing and customer success. Helps businesses grow with Do'ppi.ai.",
+        initials: "RM",
         socials: [
-          { icon: "linkedin", href: "https://www.linkedin.com/in/abdumalikov/", label: "LinkedIn" },
-          { icon: "telegram", href: "#", label: "Telegram" },
+          { icon: "linkedin", href: "#", label: "LinkedIn" },
+          { icon: "instagram", href: "#", label: "Instagram" },
         ],
       },
       {
@@ -945,13 +944,14 @@ const en: SiteCopy = {
         socials: [{ icon: "linkedin", href: "https://www.linkedin.com/in/nodirbek-kamalov", label: "LinkedIn" }],
       },
       {
-        name: "Rifat Mamayusupov",
-        role: "Head of Growth",
-        bio: "Leads marketing and customer success. Helps businesses grow with Do'ppi.ai.",
-        initials: "RM",
+        name: "Abdumalikov Aziz",
+        role: "AI Engineer",
+        bio: "Works on the platform's AI models.",
+        initials: "AA",
+        image: "/team/abdumalikov_a.jpg",
         socials: [
-          { icon: "linkedin", href: "#", label: "LinkedIn" },
-          { icon: "instagram", href: "#", label: "Instagram" },
+          { icon: "linkedin", href: "https://www.linkedin.com/in/abdumalikov/", label: "LinkedIn" },
+          { icon: "telegram", href: "#", label: "Telegram" },
         ],
       },
     ],
