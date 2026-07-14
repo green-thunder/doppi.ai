@@ -1,9 +1,12 @@
-// Prisma schema for the Do'ppi.ai content backend.
+// Prisma schema for Do'ppi.ai.
 //
-// Content is modelled as one row per top-level section (e.g. "hero", "pricing",
-// "team") per language. Each row's `data` holds that section's subtree as JSON,
-// mirroring the `SiteCopy` shape in lib/content.ts. Rows are seeded from
-// content.ts (npm run db:seed) and edited through the /admin panel.
+// Two concerns live here:
+//   1. CMS  — the `Section` model backs the marketing site's /admin content editor
+//             (one row per top-level SiteCopy key per language).
+//   2. CRM  — a multi-tenant sales CRM product. Every CRM row is scoped to an
+//             `Organization` (the tenant). Users belong to exactly one org and
+//             carry a role. All data access MUST be filtered by orgId — see
+//             lib/crm/auth.ts (requireUser) and lib/crm/tenant.ts.
 
 generator client {
   provider = "prisma-client-js"
@@ -14,12 +17,345 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  CMS (marketing site content)
+// ─────────────────────────────────────────────────────────────────────────────
+
 model Section {
   key       String // top-level SiteCopy key, e.g. "hero", "team", "pricing"
   lang      String // "uz" | "en"
   data      Json // the section's subtree, shape-compatible with SiteCopy[key]
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@id([key, lang])
   @@map("sections")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  CRM
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  OWNER // full control incl. org settings + member management
+  ADMIN // manage members, stages, all records
+  AGENT // manage own + assigned records
+}
+
+enum DealStatus {
+  OPEN
+  WON
+  LOST
+}
+
+enum ActivityType {
+  CALL
+  MEETING
+  EMAIL
+  TASK
+  NOTE
+}
+
+enum LeadSource {
+  WEBSITE
+  MANUAL
+  IMPORT
+  REFERRAL
+  SOCIAL
+  OTHER
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  currency  String   @default("UZS")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users            User[]
+  companies        Company[]
+  contacts         Contact[]
+  stages           Stage[]
+  deals            Deal[]
+  activities       Activity[]
+  invitations      Invitation[]
+  fieldDefinitions FieldDefinition[]
+  savedViews       SavedView[]
+  automationRules  AutomationRule[]
+
+  @@map("organizations")
+}
+
+model User {
+  id           String       @id @default(cuid())
+  orgId        String
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  email        String       @unique
+  name         String
+  passwordHash String
+  role         Role         @default(AGENT)
+  locale       String       @default("uz")
+  avatarColor  String       @default("#E6A92C")
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  lastLoginAt  DateTime?
+
+  sessions           Session[]
+  ownedCompanies     Company[]  @relation("CompanyOwner")
+  ownedContacts      Contact[]  @relation("ContactOwner")
+  ownedDeals         Deal[]     @relation("DealOwner")
+  assignedActivities Activity[] @relation("ActivityAssignee")
+  createdActivities  Activity[] @relation("ActivityCreator")
+
+  @@index([orgId])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Company {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name      String
+  website   String?
+  industry  String?
+  phone     String?
+  email     String?
+  address      String?
+  notes        String?
+  customFields Json    @default("{}")
+  ownerId      String?
+  owner        User?        @relation("CompanyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  contacts   Contact[]
+  deals      Deal[]
+  activities Activity[]
+
+  @@index([orgId])
+  @@index([ownerId])
+  @@map("companies")
+}
+
+model Contact {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  firstName String
+  lastName  String?
+  email     String?
+  phone     String?
+  position  String?
+  source       LeadSource @default(MANUAL)
+  tags         String[]   @default([])
+  notes        String?
+  customFields Json       @default("{}")
+  companyId    String?
+  company   Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  ownerId   String?
+  owner     User?        @relation("ContactOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  deals      Deal[]
+  activities Activity[]
+
+  @@index([orgId])
+  @@index([companyId])
+  @@index([ownerId])
+  @@map("contacts")
+}
+
+model Stage {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name      String
+  order     Int
+  isWon     Boolean      @default(false)
+  isLost    Boolean      @default(false)
+  color     String       @default("#E6A92C")
+  createdAt DateTime     @default(now())
+
+  deals Deal[]
+
+  @@index([orgId])
+  @@map("stages")
+}
+
+model Deal {
+  id                String       @id @default(cuid())
+  orgId             String
+  org               Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  title             String
+  amount            Float        @default(0) // stored in the org's currency (UZS by default)
+  currency          String       @default("UZS")
+  customFields      Json         @default("{}")
+  status            DealStatus   @default(OPEN)
+  stageId           String
+  stage             Stage        @relation(fields: [stageId], references: [id])
+  position          Int          @default(0) // manual ordering within a stage column
+  contactId         String?
+  contact           Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  companyId         String?
+  company           Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  ownerId           String?
+  owner             User?        @relation("DealOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  expectedCloseDate DateTime?
+  closedAt          DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  activities Activity[]
+
+  @@index([orgId])
+  @@index([stageId])
+  @@index([ownerId])
+  @@map("deals")
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  type        ActivityType @default(TASK)
+  subject     String
+  notes       String?
+  dueDate     DateTime?
+  completed   Boolean      @default(false)
+  completedAt DateTime?
+  contactId   String?
+  contact     Contact?     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  companyId   String?
+  company     Company?     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  dealId      String?
+  deal        Deal?        @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?        @relation("ActivityAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdById String?
+  createdBy   User?        @relation("ActivityCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([orgId])
+  @@index([dealId])
+  @@index([contactId])
+  @@index([assigneeId])
+  @@map("activities")
+}
+
+model Invitation {
+  id          String       @id @default(cuid())
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  email       String
+  name        String
+  role        Role         @default(AGENT)
+  tokenHash   String       @unique // sha256 of the raw token carried by the invite link
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  invitedById String? // creator user id (no relation, kept simple)
+  createdAt   DateTime     @default(now())
+
+  @@index([orgId])
+  @@index([email])
+  @@map("invitations")
+}
+
+// ── Custom fields, saved views, automation ──────────────────────────────────
+
+enum CustomEntity {
+  CONTACT
+  COMPANY
+  DEAL
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  DATE
+  SELECT
+  BOOLEAN
+}
+
+model FieldDefinition {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  entity    CustomEntity
+  key       String // stable key stored in each record's customFields JSON
+  label     String
+  type      FieldType    @default(TEXT)
+  options   String[]     @default([]) // choices for SELECT
+  order     Int          @default(0)
+  createdAt DateTime     @default(now())
+
+  @@unique([orgId, entity, key])
+  @@index([orgId, entity])
+  @@map("field_definitions")
+}
+
+enum ViewEntity {
+  CONTACT
+  COMPANY
+  DEAL
+  ACTIVITY
+}
+
+model SavedView {
+  id        String       @id @default(cuid())
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  userId    String? // null = shared org view
+  entity    ViewEntity
+  name      String
+  filters   Json         @default("{}")
+  createdAt DateTime     @default(now())
+
+  @@index([orgId, entity])
+  @@map("saved_views")
+}
+
+enum AutomationTrigger {
+  DEAL_STAGE_CHANGED
+  DEAL_WON
+  DEAL_LOST
+  CONTACT_CREATED
+  WEBSITE_LEAD
+}
+
+enum AutomationAction {
+  CREATE_TASK
+  ASSIGN_OWNER
+  ADD_TAG
+}
+
+model AutomationRule {
+  id            String            @id @default(cuid())
+  orgId         String
+  org           Organization      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name          String
+  trigger       AutomationTrigger
+  triggerConfig Json              @default("{}") // e.g. { stageId }
+  action        AutomationAction
+  actionConfig  Json              @default("{}") // e.g. { subject, assigneeId, tag }
+  active        Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([orgId, trigger])
+  @@map("automation_rules")
 }

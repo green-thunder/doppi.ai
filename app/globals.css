@@ -60,8 +60,8 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
-    /* Global zoom: scale the whole rem-based UI up by 40%. */
-    font-size: 140%;
+    /* Global zoom: scale the whole rem-based UI up by 12%. */
+    font-size: 112%;
   }
 
   body {

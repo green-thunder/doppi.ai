@@ -121,7 +121,7 @@ export function Contact() {
                 </div>
               ) : (
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     const fd = new FormData(e.currentTarget as HTMLFormElement);
                     const name = (fd.get("name") ?? "").toString().trim();
@@ -129,18 +129,30 @@ export function Contact() {
                     const email = (fd.get("email") ?? "").toString().trim();
                     const business = (fd.get("business") ?? "").toString().trim();
                     const message = (fd.get("message") ?? "").toString().trim();
-                    const subject = `Do'ppi.ai demo — ${business || name}`;
-                    const body = [
-                      `${t.contact.form.name}: ${name}`,
-                      `${t.contact.form.phone}: ${phone}`,
-                      `${t.contact.form.email}: ${email}`,
-                      `${t.contact.form.business}: ${business}`,
-                      "",
-                      message,
-                    ].join("\n");
-                    window.location.href = `mailto:${t.contact.email}?subject=${encodeURIComponent(
-                      subject,
-                    )}&body=${encodeURIComponent(body)}`;
+
+                    // Persist the lead into the CRM. Fall back to a mailto link if
+                    // the request fails so no submission is ever lost.
+                    try {
+                      const res = await fetch("/api/leads", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name, phone, email, business, message }),
+                      });
+                      if (!res.ok) throw new Error("request failed");
+                    } catch {
+                      const subject = `Do'ppi.ai demo — ${business || name}`;
+                      const body = [
+                        `${t.contact.form.name}: ${name}`,
+                        `${t.contact.form.phone}: ${phone}`,
+                        `${t.contact.form.email}: ${email}`,
+                        `${t.contact.form.business}: ${business}`,
+                        "",
+                        message,
+                      ].join("\n");
+                      window.location.href = `mailto:${t.contact.email}?subject=${encodeURIComponent(
+                        subject,
+                      )}&body=${encodeURIComponent(body)}`;
+                    }
                     setSent(true);
                   }}
                   className="grid gap-x-4 gap-y-5 sm:grid-cols-2"
