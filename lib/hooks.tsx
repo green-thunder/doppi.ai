@@ -21,7 +21,7 @@ import { useInView, useReducedMotion, animate } from "framer-motion";
  * while visible. `amount` is how much of the element must be visible to count.
  */
 export function useInViewLoop(
-  ref: React.RefObject<Element>,
+  ref: React.RefObject<Element | null>,
   { amount = 0.4 }: { amount?: number } = {},
 ): boolean {
   return useInView(ref, { amount });
@@ -243,7 +243,7 @@ export function useCountUp(raw: string, active: boolean, duration = 1.2): string
  */
 export function usePointerTilt(opts?: {
   maxTilt?: number;
-}): React.RefObject<HTMLDivElement> {
+}): React.RefObject<HTMLDivElement | null> {
   const { maxTilt = 6 } = opts ?? {};
   const reduce = useReducedMotion();
   const ref = React.useRef<HTMLDivElement>(null);
