@@ -47,9 +47,6 @@ const config: Config = {
         xl: "1rem",
         "2xl": "1.25rem",
       },
-      maxWidth: {
-        "8xl": "88rem",
-      },
       boxShadow: {
         gold: "0 0 0 1px rgba(230,169,44,0.25), 0 8px 40px -8px rgba(230,169,44,0.35)",
         "gold-sm": "0 0 24px -6px rgba(230,169,44,0.45)",
@@ -57,13 +54,8 @@ const config: Config = {
       },
       backgroundImage: {
         "gold-gradient": "linear-gradient(135deg, #F1D488 0%, #E6A92C 45%, #C98E1E 100%)",
-        "radial-fade": "radial-gradient(60% 60% at 50% 0%, rgba(230,169,44,0.12) 0%, rgba(10,10,11,0) 70%)",
       },
       keyframes: {
-        "fade-up": {
-          "0%": { opacity: "0", transform: "translateY(16px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
         "pulse-ring": {
           "0%": { transform: "scale(0.9)", opacity: "0.7" },
           "70%": { transform: "scale(1.6)", opacity: "0" },
@@ -72,13 +64,6 @@ const config: Config = {
         "marquee": {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
-        },
-        "shimmer": {
-          "100%": { transform: "translateX(100%)" },
-        },
-        "wave": {
-          "0%, 100%": { transform: "scaleY(0.35)" },
-          "50%": { transform: "scaleY(1)" },
         },
         "accordion-down": {
           from: { height: "0" },
@@ -97,32 +82,23 @@ const config: Config = {
           "0%": { transform: "rotate(0deg)" },
           "100%": { transform: "rotate(360deg)" },
         },
-        "spin-slow-rev": {
-          "0%": { transform: "rotate(360deg)" },
-          "100%": { transform: "rotate(0deg)" },
-        },
         breathe: {
           "0%, 100%": { opacity: "0.6" },
           "50%": { opacity: "1" },
         },
       },
       animation: {
-        "fade-up": "fade-up 0.6s ease-out both",
         "pulse-ring": "pulse-ring 2.4s cubic-bezier(0.4,0,0.6,1) infinite",
         marquee: "marquee 32s linear infinite",
-        shimmer: "shimmer 2s infinite",
-        wave: "wave 1.1s ease-in-out infinite",
         "accordion-down": "accordion-down 0.25s ease-out",
         "accordion-up": "accordion-up 0.25s ease-out",
         "aurora-drift": "aurora-drift 26s ease-in-out infinite",
         "spin-slow": "spin-slow 90s linear infinite",
-        "spin-slow-rev": "spin-slow-rev 120s linear infinite",
         breathe: "breathe 7s ease-in-out infinite",
       },
     },
   },
   plugins: [
-    require("tailwindcss-animate"),
     ({ addVariant }: { addVariant: (name: string, def: string) => void }) => {
       addVariant("light", ".light &");
     },

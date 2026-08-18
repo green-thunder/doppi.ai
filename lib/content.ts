@@ -68,7 +68,6 @@ export interface SiteCopy {
   };
   nav: {
     links: { href: string; label: string }[];
-    signIn: string;
     cta: string;
   };
   hero: {
@@ -214,7 +213,6 @@ const uz: SiteCopy = {
       { href: "#team", label: "Jamoa" },
       { href: "#contact", label: "Aloqa" },
     ],
-    signIn: "Kirish",
     cta: "Bepul boshlash",
   },
   hero: {
@@ -638,7 +636,6 @@ const en: SiteCopy = {
       { href: "#team", label: "Team" },
       { href: "#contact", label: "Contact" },
     ],
-    signIn: "Sign in",
     cta: "Start free",
   },
   hero: {

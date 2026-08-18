@@ -4,7 +4,7 @@ import { motion, useScroll, useSpring, useReducedMotion } from "framer-motion";
 
 /**
  * Thin gold progress bar pinned to the top of the viewport, tracking scroll.
- * Decorative — hidden entirely under reduced motion (a frozen bar conveys nothing).
+ * Hidden entirely under reduced motion.
  */
 export function ScrollProgress() {
   const reduce = useReducedMotion();
