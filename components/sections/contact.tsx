@@ -130,7 +130,7 @@ export function Contact() {
                     const business = (fd.get("business") ?? "").toString().trim();
                     const message = (fd.get("message") ?? "").toString().trim();
 
-                    // Persist the lead into the CRM. Fall back to a mailto link if
+                    // Send the lead to the API. Fall back to a mailto link if
                     // the request fails so no submission is ever lost.
                     try {
                       const res = await fetch("/api/leads", {

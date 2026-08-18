@@ -15,7 +15,8 @@ Bilingual (Uzbek default, English toggle), dark gold-on-black brand, built as a 
 
 ```bash
 npm install
-npm run dev      # http://localhost:3000
+npm run dev        # http://localhost:3000
+npm run typecheck  # tsc --noEmit
 ```
 
 Production:
