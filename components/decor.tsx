@@ -1,65 +1,49 @@
-"use client";
-
-import { useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Medallion } from "@/components/brand";
 
 /**
- * Slow gold aurora: a theme-aware mesh wash plus two drifting, blurred gold
- * blobs. Sits behind hero content. Under reduced motion the blobs are static
- * (still visible) — the global CSS reset also freezes any residual animation.
+ * Server components: no hooks needed here. Reduced motion is handled entirely
+ * by CSS — the global reset in globals.css freezes every animation, and
+ * `motion-reduce:animate-none` removes these ones outright.
+ */
+
+/**
+ * Slow gold aurora: a theme-aware mesh wash plus two drifting gold blobs. The
+ * blobs are pre-blurred radial gradients rather than `filter: blur(120px)` —
+ * same soft look, none of the huge rasterized filter surfaces the GPU had to
+ * hold and re-composite for the whole 26s drift loop.
  */
 export function AuroraBackdrop({ className }: { className?: string }) {
-  const reduce = useReducedMotion();
   return (
     <div
       aria-hidden="true"
       className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}
     >
       <div className="absolute inset-0 bg-aurora mask-fade-b" />
-      <div
-        className={cn(
-          "decor-glow absolute left-[10%] top-[-8rem] h-72 w-[34rem] rounded-full bg-gold-500/20 blur-[120px]",
-          !reduce && "animate-aurora-drift will-change-transform",
-        )}
-      />
-      <div
-        className={cn(
-          "decor-glow absolute right-[6%] top-[2rem] h-64 w-[28rem] rounded-full bg-gold-300/15 blur-[130px]",
-          !reduce && "animate-aurora-drift [animation-delay:-13s] will-change-transform",
-        )}
-      />
+      <div className="decor-glow absolute left-[10%] top-[-8rem] h-72 w-[34rem] animate-aurora-drift rounded-full bg-[radial-gradient(closest-side,hsl(var(--g-500)/0.26),transparent_72%)] motion-reduce:animate-none" />
+      <div className="decor-glow absolute right-[6%] top-[2rem] h-64 w-[28rem] animate-aurora-drift rounded-full bg-[radial-gradient(closest-side,hsl(var(--g-300)/0.2),transparent_72%)] [animation-delay:-13s] motion-reduce:animate-none" />
     </div>
   );
 }
 
 /**
- * Rotating + breathing Medallion watermark for section corners. Positioning
- * lives on the wrapper so translate-based centering isn't clobbered by the
- * SVG's rotation. Reduced motion → a static medallion (today's look).
+ * Slowly rotating Medallion watermark for section corners. Positioning lives on
+ * the wrapper so translate-based centering isn't clobbered by the SVG's
+ * rotation. (The old opacity "breathe" pulse is gone — a pulse on a 7%-opacity
+ * watermark was motion for its own sake.)
  */
 export function AnimatedMedallion({
   className,
   spin = true,
-  breathe = true,
 }: {
   className?: string;
   spin?: boolean;
-  breathe?: boolean;
 }) {
-  const reduce = useReducedMotion();
-  // NOTE: spin + breathe live on separate elements. Two `animate-*` classes on
-  // ONE element both set the `animation` shorthand, so only one would apply.
   return (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "pointer-events-none absolute",
-        !reduce && breathe && "animate-breathe [animation-duration:9s]",
-        className,
-      )}
-    >
-      <Medallion className={cn("h-full w-full", !reduce && spin && "animate-spin-slow")} />
+    <div aria-hidden="true" className={cn("pointer-events-none absolute", className)}>
+      <Medallion
+        className={cn("h-full w-full", spin && "animate-spin-slow motion-reduce:animate-none")}
+      />
     </div>
   );
 }

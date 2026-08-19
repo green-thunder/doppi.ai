@@ -1,13 +1,6 @@
-"use client";
-
-import { useCopy } from "@/lib/i18n";
-import {
-  Container,
-  Section,
-  SectionHeading,
-  Reveal,
-  InteractiveCard,
-} from "@/components/primitives";
+import type { SiteCopy } from "@/lib/content";
+import { Container, Section, SectionHeading } from "@/components/layout";
+import { Reveal, InteractiveCard } from "@/components/primitives";
 import { Icon } from "@/components/icons";
 import { DoppiMark } from "@/components/brand";
 import { cn } from "@/lib/utils";
@@ -18,21 +11,20 @@ import { cn } from "@/lib/utils";
 // even grid on tablet / a single column on mobile.
 const SPANS = ["lg:col-span-2 lg:row-span-2", "", "", "", "", ""];
 
-export function Features() {
-  const t = useCopy();
+export function Features({ t }: { t: SiteCopy["features"] }) {
 
   return (
     <Section id="features">
       <Container>
         <SectionHeading
-          eyebrow={t.features.eyebrow}
-          title={t.features.title}
-          subtitle={t.features.subtitle}
-          align="center"
+          eyebrow={t.eyebrow}
+          title={t.title}
+          subtitle={t.subtitle}
+          align="split"
         />
 
-        <ul className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:auto-rows-fr">
-          {t.features.items.map((item, i) => {
+        <ul className="mt-12 grid grid-cols-1 gap-4 sm:mt-16 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:auto-rows-fr">
+          {t.items.map((item, i) => {
             const hero = i === 0;
             return (
               <Reveal key={item.title} as="li" delayIndex={i} className={cn(SPANS[i])}>

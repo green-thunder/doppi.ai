@@ -1,10 +1,9 @@
-"use client";
-
 import { ArrowLeft, Mail, Phone } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { content } from "@/lib/content";
+import type { Lang } from "@/lib/lang";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
-import { Container, Eyebrow, GoldGlow } from "@/components/primitives";
+import { Container, Eyebrow, GoldGlow } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 
 interface TermsBlock {
@@ -229,21 +228,22 @@ const TERMS: Record<"uz" | "en", TermsCopy> = {
   },
 };
 
-export default function TermsPage() {
-  const { lang, t } = useI18n();
+export function TermsPage({ lang }: { lang: Lang }) {
+  const t = content[lang];
+  const home = lang === "en" ? "/en" : "/";
   const copy = TERMS[lang];
 
   return (
     <>
-      <Navbar />
-      <main id="main" className="relative overflow-hidden pt-32 pb-20">
+      <Navbar t={t.nav} a11y={t.a11y} lang={lang} />
+      <main id="main" tabIndex={-1} className="relative overflow-hidden pt-32 pb-20">
         <GoldGlow className="left-1/2 top-0 h-72 w-[36rem] -translate-x-1/2 opacity-60" />
 
         <Container>
           <div className="relative mx-auto max-w-3xl">
             {/* Back link */}
             <a
-              href="/"
+              href={home}
               className="inline-flex min-h-11 items-center gap-2 rounded-full text-sm font-medium text-muted-foreground transition-colors hover:text-gold-300"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
@@ -349,7 +349,7 @@ export default function TermsPage() {
                 {copy.ctaBody}
               </p>
               <Button asChild variant="outlineGold" size="md" className="mt-6">
-                <a href="/">
+                <a href={home}>
                   <ArrowLeft className="size-4" aria-hidden="true" />
                   {copy.ctaButton}
                 </a>
@@ -358,7 +358,7 @@ export default function TermsPage() {
           </div>
         </Container>
       </main>
-      <Footer />
+      <Footer t={t.footer} contact={t.contact} />
     </>
   );
 }

@@ -33,7 +33,10 @@
     color-scheme: light;
     --background: 0 0% 100%; /* pure white */
     --foreground: 28 16% 12%; /* warm near-black */
-    --card: 0 0% 100%; /* pure white */
+    /* Slightly warm off-white: at the /70–/85 alphas the cards actually use,
+       pure white composited over the white canvas made every card invisible
+       except for its border. This survives the alpha as a perceivable panel. */
+    --card: 40 24% 96%;
     --card-foreground: 28 16% 12%;
     --muted: 40 30% 91%;
     --muted-foreground: 34 12% 34%;
@@ -44,7 +47,9 @@
     --g-50: 40 55% 55%;
     --g-100: 40 60% 48%;
     --g-200: 39 68% 40%;
-    --g-300: 39 70% 37%;
+    /* 37% measured 4.25:1 on the ivory canvas — just under AA for body text.
+       35% is 4.68:1 and visually identical. */
+    --g-300: 39 70% 35%;
     --g-400: 38 72% 34%;
     --g-500: 38 74% 32%;
     --g-600: 37 76% 29%;
@@ -62,6 +67,13 @@
     -webkit-text-size-adjust: 100%;
     /* Global zoom: scale the whole rem-based UI up by 12%. */
     font-size: 112%;
+    /* Lets block-size transition to/from `auto` (FAQ disclosure animation).
+       Browsers without support keep the instant open/close. */
+    interpolate-size: allow-keywords;
+    /* The navbar is fixed at 4rem; without this every in-page anchor and every
+       element the browser scrolls to (including focus targets — WCAG 2.4.11)
+       lands underneath it. */
+    scroll-padding-top: 5.5rem;
   }
 
   body {
@@ -78,12 +90,32 @@
   button:focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
-    border-radius: 6px;
+  }
+
+  /* The skip link targets #main, so main has tabIndex={-1}; don't paint a focus
+     ring around the whole page when it receives that programmatic focus. */
+  main:focus {
+    outline: none;
   }
 
   ::selection {
     background: hsl(var(--g-500) / 0.28);
     color: hsl(var(--foreground));
+  }
+
+  /* Animated FAQ disclosure — pure CSS progressive enhancement. Browsers with
+     ::details-content + interpolate-size ease the answer open; everything else
+     keeps the native instant toggle. */
+  details::details-content {
+    block-size: 0;
+    overflow: clip;
+    transition:
+      block-size 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      content-visibility 0.3s allow-discrete;
+  }
+
+  details[open]::details-content {
+    block-size: auto;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -92,8 +124,15 @@
     *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
+      animation-delay: 0s !important;
       transition-duration: 0.01ms !important;
+      transition-delay: 0s !important;
       scroll-behavior: auto !important;
+    }
+
+    /* The universal reset above never matches ::details-content. */
+    details::details-content {
+      transition: none !important;
     }
   }
 }
@@ -105,6 +144,10 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
+    /* Each wrapped line fragment gets the full gradient; without this the
+       second line of a wrapped highlight starts mid-gradient. */
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
 
   .bg-grid {
@@ -126,8 +169,34 @@
 
   .glass {
     background: rgba(20, 20, 23, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* Phones: backdrop-filter re-samples the page on every scrolled frame, which
+     low-end Android pays for dearly — swap the glass for a near-solid fill.
+     The doubled .glass.glass beats the later generic `.light .glass` rule,
+     which otherwise wins on order at equal specificity. */
+  @media (max-width: 640px) {
+    .glass {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      background: rgba(20, 20, 23, 0.94);
+    }
+
+    .light .glass.glass {
+      background: rgba(255, 255, 255, 0.96);
+    }
+  }
+
+  /* Interactive-card transition: the tilt transform must track the pointer
+     near-instantly or the card feels mushy, while the gold border/glow still
+     eases in softly. */
+  .tilt-card {
+    transition:
+      transform 0.12s linear,
+      box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   /* Soft, theme-aware gold aurora mesh (uses the gold token scale). */
@@ -136,6 +205,104 @@
       radial-gradient(40% 55% at 18% 20%, hsl(var(--g-500) / 0.14) 0%, transparent 70%),
       radial-gradient(45% 50% at 82% 12%, hsl(var(--g-300) / 0.1) 0%, transparent 72%),
       radial-gradient(50% 60% at 60% 85%, hsl(var(--g-600) / 0.08) 0%, transparent 75%);
+  }
+
+  /* Mount entrance for above-the-fold content. CSS, not JS, so it starts with
+     the stylesheet instead of waiting on hydration.
+
+     `.enter-rise` deliberately animates transform ONLY: the hero h1 is the LCP
+     element, and an element at opacity 0 does not count as painted, so fading it
+     in would push LCP out by the whole animation. Everything that is not LCP can
+     use `.enter-up`. Both are neutralised by the reduced-motion block above,
+     which zeroes duration AND delay. */
+  @keyframes enter-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes enter-rise {
+    from {
+      transform: translateY(14px);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes enter-pop {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes enter-down {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .enter-up {
+    animation: enter-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--enter-delay, 0ms);
+  }
+
+  .enter-rise {
+    animation: enter-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--enter-delay, 0ms);
+  }
+
+  .enter-pop {
+    animation: enter-pop 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--enter-delay, 0ms);
+  }
+
+  /* Fast variant for the chat bubbles that swap in the voice-agent demo. */
+  .enter-quick {
+    animation: enter-up 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .enter-down {
+    animation: enter-down 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Scroll reveal. The hidden state is a CLASS, never inline SSR style: the
+     server ships the content visible and JS only arms these below the fold,
+     so the page reads without JS and LCP is not gated on the bundle. */
+  /* No will-change here: browsers promote for the duration of the transition on
+     their own, and a persistent hint on ~80 revealed elements (every heading
+     word included) kept that many compositor layers alive for the whole visit. */
+  .reveal {
+    transition:
+      opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .reveal-hidden {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  /* Word-level variant for section headings — a shorter rise from the baseline. */
+  .reveal-title-hidden {
+    opacity: 0;
+    transform: translateY(0.5em);
   }
 
   /* Inline fractal-noise grain (data-uri, no external asset). Static texture. */
@@ -194,6 +361,21 @@
   .light .shadow-card {
     box-shadow:
       0 1px 0 0 rgba(0, 0, 0, 0.02) inset,
+      0 12px 32px -16px rgba(60, 40, 10, 0.18);
+  }
+
+  /* The gold blooms are tuned for the dark canvas; on white they read as a
+     yellow-brown smear (worst under the scrolled navbar). Neutral drops instead;
+     shadow-gold keeps its 1px gold outline (the popular-card emphasis). */
+  .light .shadow-gold-sm {
+    box-shadow:
+      0 1px 0 0 hsl(var(--border)),
+      0 8px 24px -16px rgba(60, 40, 10, 0.18);
+  }
+
+  .light .shadow-gold {
+    box-shadow:
+      0 0 0 1px rgba(230, 169, 44, 0.25),
       0 12px 32px -16px rgba(60, 40, 10, 0.18);
   }
 }

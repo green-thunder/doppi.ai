@@ -65,14 +65,6 @@ const config: Config = {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
         "aurora-drift": {
           "0%, 100%": { transform: "translate3d(-4%, -2%, 0) scale(1)" },
           "33%": { transform: "translate3d(6%, 3%, 0) scale(1.08)" },
@@ -90,8 +82,6 @@ const config: Config = {
       animation: {
         "pulse-ring": "pulse-ring 2.4s cubic-bezier(0.4,0,0.6,1) infinite",
         marquee: "marquee 32s linear infinite",
-        "accordion-down": "accordion-down 0.25s ease-out",
-        "accordion-up": "accordion-up 0.25s ease-out",
         "aurora-drift": "aurora-drift 26s ease-in-out infinite",
         "spin-slow": "spin-slow 90s linear infinite",
         breathe: "breathe 7s ease-in-out infinite",
@@ -101,6 +91,9 @@ const config: Config = {
   plugins: [
     ({ addVariant }: { addVariant: (name: string, def: string) => void }) => {
       addVariant("light", ".light &");
+      // Fine-pointer-only styles: lets the 3D card transform exist solely on
+      // devices where the tilt actually runs, so phones never promote layers.
+      addVariant("fine", "@media (pointer: fine)");
     },
   ],
 };

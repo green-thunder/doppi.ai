@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useInView, useReducedMotion, animate } from "framer-motion";
 
 /**
  * Reusable client hooks for the landing-page motion layer.
@@ -13,18 +12,268 @@ import { useInView, useReducedMotion, animate } from "framer-motion";
  */
 
 /* -------------------------------------------------------------------------- */
+/* useReducedMotion / useInView — the two motion primitives everything else uses */
+/* -------------------------------------------------------------------------- */
+
+// One MediaQueryList + one change listener for the whole page, instead of ~46
+// per-hook copies. Lazily created so the module stays importable on the server.
+let reduceMql: MediaQueryList | null = null;
+const reduceSubs = new Set<() => void>();
+
+function ensureReduceMql(): MediaQueryList {
+  if (!reduceMql) {
+    reduceMql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    reduceMql.addEventListener("change", () => {
+      reduceSubs.forEach((cb) => cb());
+    });
+  }
+  return reduceMql;
+}
+
+function subscribeReduce(cb: () => void): () => void {
+  ensureReduceMql();
+  reduceSubs.add(cb);
+  return () => {
+    reduceSubs.delete(cb);
+  };
+}
+
+function getReduceSnapshot(): boolean | null {
+  return ensureReduceMql().matches;
+}
+
+function getReduceServerSnapshot(): boolean | null {
+  return null;
+}
+
+/**
+ * `null` on the server and during the hydration render (so both agree), then
+ * the live value. Callers treat null as "animate": that is what the markup was
+ * always prerendered as.
+ */
+export function useReducedMotion(): boolean | null {
+  return React.useSyncExternalStore(
+    subscribeReduce,
+    getReduceSnapshot,
+    getReduceServerSnapshot,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shared IntersectionObserver pool                                           */
+/* -------------------------------------------------------------------------- */
+
+interface IoPool {
+  io: IntersectionObserver;
+  cbs: Map<Element, (entry: IntersectionObserverEntry) => void>;
+}
+
+// Observers keyed by option signature. The page only ever uses a couple of
+// signatures ('-80px' reveals/count-ups, threshold-0.4 loop gates), so ~70
+// per-element observers collapse into 2-3 shared ones.
+const ioPools = new Map<string, IoPool>();
+
+function observeShared(
+  el: Element,
+  { margin, amount }: { margin?: string; amount?: number },
+  cb: (entry: IntersectionObserverEntry) => void,
+): () => void {
+  const key = `${margin ?? ""}|${amount ?? ""}`;
+  let pool = ioPools.get(key);
+  if (!pool) {
+    const cbs: IoPool["cbs"] = new Map();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) cbs.get(entry.target)?.(entry);
+      },
+      { rootMargin: margin, threshold: amount },
+    );
+    pool = { io, cbs };
+    ioPools.set(key, pool);
+  }
+  pool.cbs.set(el, cb);
+  pool.io.observe(el);
+
+  let done = false;
+  return () => {
+    if (done) return;
+    done = true;
+    pool.cbs.delete(el);
+    pool.io.unobserve(el);
+    if (pool.cbs.size === 0) {
+      pool.io.disconnect();
+      ioPools.delete(key);
+    }
+  };
+}
+
+/**
+ * Elements inside a `content-visibility: auto` section that is currently
+ * skipped report an empty rect; geometry-based decisions must ignore them
+ * until the section is actually laid out.
+ */
+function isEmptyRect(rect: DOMRectReadOnly): boolean {
+  return rect.width === 0 && rect.height === 0;
+}
+
+/**
+ * IntersectionObserver wrapper (pooled). `once` latches on first entry;
+ * otherwise the value tracks visibility both ways (used by the looping demos).
+ * `margin` maps to rootMargin, `amount` to threshold.
+ */
+export function useInView(
+  ref: React.RefObject<Element | null>,
+  { once = false, margin, amount }: { once?: boolean; margin?: string; amount?: number } = {},
+): boolean {
+  const [inView, setInView] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // No observer (very old browser, or jsdom): treat as visible so nothing is
+    // left permanently hidden or permanently paused.
+    if (typeof IntersectionObserver === "undefined") {
+      setInView(true);
+      return;
+    }
+    const cleanup = observeShared(el, { margin, amount }, (entry) => {
+      if (isEmptyRect(entry.boundingClientRect)) return;
+      if (entry.isIntersecting) {
+        setInView(true);
+        if (once) cleanup();
+      } else if (!once) {
+        setInView(false);
+      }
+    });
+    return cleanup;
+  }, [ref, once, margin, amount]);
+
+  return inView;
+}
+
+/**
+ * Solves a CSS cubic-bezier so JS-driven motion eases identically to the CSS
+ * transitions elsewhere on the page. Newton-Raphson, 5 iterations — plenty for
+ * per-frame values that end up rounded to an integer anyway.
+ */
+function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
+  const cx = 3 * x1;
+  const bx = 3 * (x2 - x1) - cx;
+  const ax = 1 - cx - bx;
+  const cy = 3 * y1;
+  const by = 3 * (y2 - y1) - cy;
+  const ay = 1 - cy - by;
+
+  const sampleX = (t: number) => ((ax * t + bx) * t + cx) * t;
+  const sampleY = (t: number) => ((ay * t + by) * t + cy) * t;
+  const slopeX = (t: number) => (3 * ax * t + 2 * bx) * t + cx;
+
+  return (x: number) => {
+    let t = x;
+    for (let i = 0; i < 5; i += 1) {
+      const d = slopeX(t);
+      if (Math.abs(d) < 1e-6) break;
+      t -= (sampleX(t) - x) / d;
+    }
+    return sampleY(Math.min(Math.max(t, 0), 1));
+  };
+}
+
+/** The site's standard ease — matches cubic-bezier(0.22, 1, 0.36, 1) in CSS. */
+const EASE_OUT = cubicBezier(0.22, 1, 0.36, 1);
+
+/* -------------------------------------------------------------------------- */
+/* useRevealPhase — scroll-reveal that never hides server-rendered content      */
+/* -------------------------------------------------------------------------- */
+
+export type RevealPhase = "static" | "hidden" | "shown";
+
+/**
+ * Drives the scroll-in reveal WITHOUT shipping `opacity: 0` in the HTML.
+ *
+ * The server renders "static" — fully visible — so the page is readable before
+ * (and without) hydration, and the LCP element is not gated on the JS bundle.
+ * After mount the hidden state is armed only for elements that are still below
+ * the fold, where hiding them is invisible to the visitor. Anything already on
+ * screen simply stays painted.
+ */
+export function useRevealPhase(ref: React.RefObject<Element | null>): RevealPhase {
+  const [phase, setPhase] = React.useState<RevealPhase>("static");
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Already in view at mount: leave it alone rather than hide what is being
+    // read. An empty rect means the element sits inside a skipped
+    // content-visibility section — i.e. far below the fold — so arming is safe.
+    const rect = el.getBoundingClientRect();
+    if (!isEmptyRect(rect) && rect.top < window.innerHeight) return;
+
+    setPhase("hidden");
+    const cleanup = observeShared(el, { margin: "-80px" }, (entry) => {
+      if (isEmptyRect(entry.boundingClientRect)) return;
+      if (entry.isIntersecting) {
+        setPhase("shown");
+        cleanup();
+      }
+    });
+    return cleanup;
+  }, [ref]);
+
+  return phase;
+}
+
+/* -------------------------------------------------------------------------- */
 /* useInViewLoop — resume/pause looping demos as they enter/leave the viewport */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Thin wrapper over framer's `useInView` (NOT `once`) so looping demos only run
- * while visible. `amount` is how much of the element must be visible to count.
+ * Visibility gate for looping demos (NOT `once`), so they only run on screen.
+ * `amount` is how much of the element must be visible to count.
  */
 export function useInViewLoop(
   ref: React.RefObject<Element | null>,
   { amount = 0.4 }: { amount?: number } = {},
 ): boolean {
   return useInView(ref, { amount });
+}
+
+/* -------------------------------------------------------------------------- */
+/* useActiveSection — which section id is currently mid-viewport               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Tracks which of the given section ids currently crosses the middle of the
+ * viewport (a -45%/-50% band), for the navbar's active-link indicator. Sticky:
+ * keeps the last section when none is in the band (e.g. at the very top).
+ */
+export function useActiveSection(ids: string[]): string | null {
+  const [active, setActive] = React.useState<string | null>(null);
+  const key = ids.join(",");
+
+  React.useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") return;
+    const els = key
+      .split(",")
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (els.length === 0) return;
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(entry.target.id);
+        }
+      },
+      { rootMargin: "-45% 0px -50% 0px" },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [key]);
+
+  return active;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -153,7 +402,7 @@ export function useTypewriter(
 }
 
 /* -------------------------------------------------------------------------- */
-/* parseStat + useCountUp — animate the leading number of a stat string        */
+/* parseStat + useCountUpText — animate the leading number of a stat string    */
 /* -------------------------------------------------------------------------- */
 
 export interface ParsedStat {
@@ -202,34 +451,48 @@ export function parseStat(raw: string): ParsedStat {
 }
 
 /**
- * Drives a count-up when `active`. Returns the string to render. Init is the
- * final string (SSR-safe, no flash-of-zero). Re-runs on `raw` change (UZ↔EN).
- * Reduced motion / non-animatable → returns the final string.
+ * Drives a count-up by writing `textContent` directly — no React re-render per
+ * frame (results fires six of these at once, exactly while the user scrolls).
+ * The DOM already contains the final string from SSR, so before/without the
+ * effect nothing flashes. Re-runs on `raw` change (UZ↔EN). Reduced motion /
+ * non-animatable → the final string is (re)written once.
  */
-export function useCountUp(raw: string, active: boolean, duration = 1.2): string {
+export function useCountUpText(
+  ref: React.RefObject<HTMLElement | null>,
+  raw: string,
+  active: boolean,
+  duration = 1.2,
+): void {
   const reduce = useReducedMotion();
   const spec = React.useMemo(() => parseStat(raw), [raw]);
-  const [display, setDisplay] = React.useState<string>(raw);
 
   React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
     if (reduce || !spec.animatable || !active) {
-      setDisplay(raw);
+      el.textContent = raw;
       return;
     }
-    const controls = animate(0, spec.target, {
-      duration,
-      ease: [0.22, 1, 0.36, 1],
-      onUpdate(v) {
-        const n = spec.decimals
-          ? v.toFixed(spec.decimals)
-          : Math.round(v).toString();
-        setDisplay(`${spec.prefix}${n}${spec.suffix}`);
-      },
-    });
-    return () => controls.stop();
-  }, [raw, active, reduce, spec, duration]);
+    let frame = 0;
+    let start = 0;
+    const ms = duration * 1000;
 
-  return display;
+    const step = (now: number) => {
+      if (!start) start = now;
+      const p = Math.min((now - start) / ms, 1);
+      if (p >= 1) {
+        el.textContent = raw; // land exactly on the source string
+        return;
+      }
+      const v = EASE_OUT(p) * spec.target;
+      const n = spec.decimals ? v.toFixed(spec.decimals) : Math.round(v).toString();
+      el.textContent = `${spec.prefix}${n}${spec.suffix}`;
+      frame = window.requestAnimationFrame(step);
+    };
+
+    frame = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(frame);
+  }, [ref, raw, active, reduce, spec, duration]);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -240,6 +503,10 @@ export function useCountUp(raw: string, active: boolean, duration = 1.2): string
  * Pointer-tracking tilt + spotlight via CSS custom props (`--mx/--my` spotlight
  * center %, `--rx/--ry` tilt degrees). Disabled under reduced motion and on
  * coarse (touch) pointers. rAF-throttled; listeners detach on unmount.
+ *
+ * The card rect is captured at pointerenter (the card is at rest then, so the
+ * measurement is clean) and corrected by scroll deltas while the pointer stays
+ * inside — re-measuring per move would read back a tilt-transformed box.
  */
 export function usePointerTilt(opts?: {
   maxTilt?: number;
@@ -255,9 +522,23 @@ export function usePointerTilt(opts?: {
     if (!window.matchMedia("(pointer: fine)").matches) return;
 
     let rect = el.getBoundingClientRect();
+    let lastX = window.scrollX;
+    let lastY = window.scrollY;
+    let inside = false;
 
     const onEnter = () => {
+      inside = true;
       rect = el.getBoundingClientRect();
+      lastX = window.scrollX;
+      lastY = window.scrollY;
+    };
+    const onScroll = () => {
+      if (!inside) return;
+      const dx = window.scrollX - lastX;
+      const dy = window.scrollY - lastY;
+      lastX = window.scrollX;
+      lastY = window.scrollY;
+      rect = new DOMRect(rect.x - dx, rect.y - dy, rect.width, rect.height);
     };
     const onMove = (e: PointerEvent) => {
       if (frame.current) return;
@@ -272,6 +553,7 @@ export function usePointerTilt(opts?: {
       });
     };
     const onLeave = () => {
+      inside = false;
       if (frame.current) window.cancelAnimationFrame(frame.current);
       frame.current = 0;
       el.style.setProperty("--rx", "0deg");
@@ -283,10 +565,12 @@ export function usePointerTilt(opts?: {
     el.addEventListener("pointerenter", onEnter);
     el.addEventListener("pointermove", onMove);
     el.addEventListener("pointerleave", onLeave);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       el.removeEventListener("pointerenter", onEnter);
       el.removeEventListener("pointermove", onMove);
       el.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("scroll", onScroll);
       if (frame.current) window.cancelAnimationFrame(frame.current);
     };
   }, [reduce, maxTilt]);

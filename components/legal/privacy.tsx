@@ -1,10 +1,9 @@
-"use client";
-
 import { ArrowLeft, Mail, MapPin, Phone, ShieldCheck } from "lucide-react";
-import { useI18n } from "@/lib/i18n";
+import { content } from "@/lib/content";
+import type { Lang } from "@/lib/lang";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
-import { Container, GoldGlow } from "@/components/primitives";
+import { Container, GoldGlow } from "@/components/layout";
 
 type Section = { h: string; p: string };
 
@@ -109,20 +108,21 @@ const en: PrivacyCopy = {
   },
 };
 
-export default function PrivacyPage() {
-  const { lang } = useI18n();
+export function PrivacyPage({ lang }: { lang: Lang }) {
+  const t = content[lang];
+  const home = lang === "en" ? "/en" : "/";
   const c = lang === "uz" ? uz : en;
 
   return (
     <>
-      <Navbar />
-      <main id="main" className="relative overflow-hidden pt-32 pb-20">
+      <Navbar t={t.nav} a11y={t.a11y} lang={lang} />
+      <main id="main" tabIndex={-1} className="relative overflow-hidden pt-32 pb-20">
         <GoldGlow className="-top-24 left-1/2 h-72 w-72 -translate-x-1/2 opacity-60" />
 
         <Container>
           <div className="mx-auto max-w-3xl">
             <a
-              href="/"
+              href={home}
               className="inline-flex min-h-11 items-center gap-2 rounded-full text-sm text-muted-foreground transition-colors hover:text-gold-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
@@ -188,7 +188,7 @@ export default function PrivacyPage() {
           </div>
         </Container>
       </main>
-      <Footer />
+      <Footer t={t.footer} contact={t.contact} />
     </>
   );
 }

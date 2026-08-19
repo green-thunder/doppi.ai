@@ -1,166 +1,77 @@
 "use client";
 
 import * as React from "react";
-import { motion, useReducedMotion, useInView, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useCountUp, usePointerTilt } from "@/lib/hooks";
-
-/** Max-width content wrapper. */
-export function Container({
-  className,
-  children,
-}: {
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={cn("mx-auto w-full max-w-6xl px-5 lg:px-8", className)}>
-      {children}
-    </div>
-  );
-}
-
-/** Vertical section wrapper with consistent rhythm + optional id anchor. */
-export function Section({
-  id,
-  className,
-  children,
-}: {
-  id?: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      id={id}
-      className={cn("relative scroll-mt-24 py-20 sm:py-28", className)}
-    >
-      {children}
-    </section>
-  );
-}
-
-/** Small uppercase gold eyebrow label. */
-export function Eyebrow({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-gold-400",
-        className,
-      )}
-    >
-      <span className="h-px w-6 bg-gold-500/60" aria-hidden="true" />
-      {children}
-    </span>
-  );
-}
-
-const HEADING_CLASS =
-  "font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-[2.75rem] md:leading-[1.1]";
+import {
+  useCountUpText,
+  useInView,
+  usePointerTilt,
+  useRevealPhase,
+  type RevealPhase,
+} from "@/lib/hooks";
 
 /**
- * Section title with a scroll-triggered reveal. String titles rise word-by-word
- * from behind a mask; React-node titles (e.g. a gradient span) fall back to a
- * single fade-up block. Reduced motion → a plain static heading. Drop-in.
+ * Client-side motion primitives. Static layout primitives (Container, Section,
+ * SectionHeading, Eyebrow, GoldGlow) live in components/layout.tsx, which is
+ * directive-free so server sections don't hydrate them.
  */
-function AnimatedTitle({ title }: { title: React.ReactNode }) {
-  const reduce = useReducedMotion();
-  const ref = React.useRef<HTMLHeadingElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
 
-  if (reduce) {
-    return (
-      <h2 ref={ref} className={HEADING_CLASS}>
-        {title}
-      </h2>
-    );
-  }
+const HEADING_CLASS =
+  "font-display text-3xl font-bold leading-[1.12] tracking-[-0.02em] text-foreground sm:text-4xl md:text-[2.75rem] md:leading-[1.08] md:tracking-[-0.03em]";
+
+/** Class set for one revealing element, given the phase and its stagger index. */
+function revealProps(phase: RevealPhase, index: number, hiddenClass = "reveal-hidden") {
+  return {
+    className: phase === "static" ? undefined : cn("reveal", phase === "hidden" && hiddenClass),
+    style:
+      phase === "static"
+        ? undefined
+        : ({ "--reveal-delay": `${index * 50}ms` } as React.CSSProperties),
+  };
+}
+
+/**
+ * Section title with a scroll-triggered reveal. String titles rise word-by-word;
+ * React-node titles (e.g. a gradient span) fade up as one block. The heading is
+ * server-rendered fully visible — see `useRevealPhase` — so it reads with no JS
+ * and does not gate LCP on the bundle. Reduced motion → a plain heading.
+ */
+export function AnimatedTitle({ title }: { title: React.ReactNode }) {
+  const ref = React.useRef<HTMLHeadingElement>(null);
+  const phase = useRevealPhase(ref);
 
   if (typeof title !== "string") {
+    const { className, style } = revealProps(phase, 0);
     return (
-      <motion.h2
-        ref={ref}
-        className={HEADING_CLASS}
-        initial={{ opacity: 0, y: 16 }}
-        animate={inView ? { opacity: 1, y: 0 } : undefined}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <h2 ref={ref} className={cn(HEADING_CLASS, className)} style={style}>
         {title}
-      </motion.h2>
+      </h2>
     );
   }
 
   const words = title.split(" ");
   return (
     <h2 ref={ref} className={HEADING_CLASS}>
-      {words.map((w, i) => (
-        <React.Fragment key={i}>
-          <motion.span
-            className="inline-block"
-            initial={{ y: "0.5em", opacity: 0 }}
-            animate={inView ? { y: 0, opacity: 1 } : undefined}
-            transition={{ duration: 0.5, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {w}
-          </motion.span>
-          {i < words.length - 1 ? " " : ""}
-        </React.Fragment>
-      ))}
+      {words.map((w, i) => {
+        const { className, style } = revealProps(phase, i, "reveal-title-hidden");
+        return (
+          <React.Fragment key={i}>
+            <span className={cn("inline-block", className)} style={style}>
+              {w}
+            </span>
+            {i < words.length - 1 ? " " : ""}
+          </React.Fragment>
+        );
+      })}
     </h2>
   );
 }
 
-/** Centered section heading block: eyebrow + title + optional subtitle. */
-export function SectionHeading({
-  eyebrow,
-  title,
-  subtitle,
-  align = "center",
-  className,
-}: {
-  eyebrow?: string;
-  title: React.ReactNode;
-  subtitle?: string;
-  align?: "center" | "left";
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-4",
-        align === "center" ? "mx-auto max-w-2xl items-center text-center" : "items-start text-left",
-        className,
-      )}
-    >
-      {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
-      <AnimatedTitle title={title} />
-      {subtitle ? (
-        <p className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-          {subtitle}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-const revealVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] },
-  }),
-};
-
 /**
- * Scroll-reveal wrapper. Respects prefers-reduced-motion (renders static).
- * `delayIndex` staggers grid/list items.
+ * Scroll-reveal wrapper. Renders visible on the server and only arms the hidden
+ * state after mount for content still below the fold, so nothing a visitor can
+ * already see is ever hidden and the HTML stands on its own without JS.
+ * `delayIndex` staggers grid/list items. Static under reduced motion.
  */
 export function Reveal({
   children,
@@ -173,45 +84,23 @@ export function Reveal({
   delayIndex?: number;
   as?: "div" | "li";
 }) {
-  const reduce = useReducedMotion();
-  const MotionTag = as === "li" ? motion.li : motion.div;
-
-  if (reduce) {
-    const Tag = as;
-    return <Tag className={className}>{children}</Tag>;
-  }
+  const ref = React.useRef<HTMLDivElement>(null);
+  const phase = useRevealPhase(ref);
+  const { className: revealClass, style } = revealProps(phase, delayIndex);
+  const Tag = as;
 
   return (
-    <MotionTag
-      className={className}
-      variants={revealVariants}
-      custom={delayIndex}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-    >
+    <Tag ref={ref as never} className={cn(className, revealClass)} style={style}>
       {children}
-    </MotionTag>
-  );
-}
-
-/** Soft radial gold glow, positioned absolutely behind content. */
-export function GoldGlow({ className }: { className?: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "decor-glow pointer-events-none absolute rounded-full bg-gold-500/20 blur-[120px]",
-        className,
-      )}
-    />
+    </Tag>
   );
 }
 
 /**
  * Renders a stat string, counting the leading number up from 0 when scrolled
  * into view. Non-numeric / range strings ("24/7", "2–5×", "Custom") render
- * statically. Drop-in for a stat text node; inherits typography from `className`.
+ * statically. The animation writes textContent directly (no per-frame React
+ * renders); the SSR markup already carries the final string.
  */
 export function CountUp({
   value,
@@ -224,12 +113,12 @@ export function CountUp({
   as?: "span" | "p" | "dt" | "dd";
   duration?: number;
 }) {
-  const ref = React.useRef<HTMLSpanElement>(null);
+  const ref = React.useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
-  const display = useCountUp(value, inView, duration);
+  useCountUpText(ref, value, inView, duration);
   return (
     <Tag ref={ref as never} className={cn("tabular-nums", className)}>
-      {display}
+      {value}
     </Tag>
   );
 }
@@ -237,12 +126,24 @@ export function CountUp({
 /**
  * Shared recipe for interactive cards: hover-lift + gold border + pointer tilt
  * (driven by CSS vars from `usePointerTilt`). Neutralized under reduced motion.
+ *
+ * `.tilt-card` (globals.css) splits the transition: transform tracks the
+ * pointer at 120ms while border/shadow ease at 300ms — one shared duration made
+ * the tilt permanently chase the cursor.
+ *
+ * The 3D transform is scoped to fine pointers: on touch devices the tilt hook
+ * never runs, so the resting `perspective(...)` would only force a permanently
+ * promoted compositor layer per card for nothing.
  */
 export const interactiveCardClass =
-  "transition-[transform,box-shadow,border-color] duration-300 " +
-  "hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-gold-sm " +
-  "motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none " +
-  "[transform:perspective(900px)_rotateX(var(--rx,0deg))_rotateY(var(--ry,0deg))]";
+  "tilt-card " +
+  "hover:border-gold-500/40 hover:shadow-gold-sm " +
+  "motion-reduce:hover:shadow-none " +
+  // The hover lift has to live INSIDE this transform: as a separate
+  // `hover:-translate-y-1` utility it set the same `transform` property and
+  // silently overwrote the tilt, so the tilt never rendered at all.
+  "fine:[transform:perspective(900px)_translateY(var(--lift,0px))_rotateX(var(--rx,0deg))_rotateY(var(--ry,0deg))] " +
+  "hover:[--lift:-0.25rem] motion-reduce:hover:[--lift:0px]";
 
 /**
  * Card wrapper with pointer-tracking tilt + a cursor-following gold spotlight.
@@ -266,7 +167,7 @@ export function InteractiveCard({
     <div
       ref={ref}
       className={cn(
-        "group relative rounded-2xl border border-border bg-card/60 shadow-card will-change-transform",
+        "group relative rounded-2xl border border-border bg-card/70 shadow-card",
         interactiveCardClass,
         className,
       )}

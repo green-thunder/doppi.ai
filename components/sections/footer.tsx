@@ -1,12 +1,10 @@
-"use client";
-
 import { Mail, Phone, Globe, MapPin } from "lucide-react";
-import { useCopy } from "@/lib/i18n";
+import type { SiteCopy } from "@/lib/content";
 import { Logo, OrnamentStrip } from "@/components/brand";
-import { Container, Reveal } from "@/components/primitives";
+import { Container } from "@/components/layout";
+import { Reveal } from "@/components/primitives";
 
-export function Footer() {
-  const t = useCopy();
+export function Footer({ t, contact }: { t: SiteCopy["footer"]; contact: SiteCopy["contact"] }) {
 
   return (
     <footer className="relative border-t border-border bg-background">
@@ -18,11 +16,11 @@ export function Footer() {
           <div className="max-w-xs">
             <Logo />
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-              {t.footer.tagline}
+              {t.tagline}
             </p>
           </div>
 
-          {t.footer.columns.map((col) => (
+          {t.columns.map((col) => (
             <div key={col.title}>
               <h3 className="font-display text-sm font-semibold text-foreground">
                 {col.title}
@@ -44,43 +42,45 @@ export function Footer() {
 
           <div>
             <h3 className="font-display text-sm font-semibold text-foreground">
-              {t.footer.contactTitle}
+              {t.contactTitle}
             </h3>
             <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
               <li>
                 <a
-                  href={`mailto:${t.contact.email}`}
+                  href={`mailto:${contact.email}`}
                   className="inline-flex items-center gap-2.5 transition-colors hover:text-gold-300"
                 >
-                  <Mail className="size-4 text-gold-400" />
-                  {t.contact.email}
+                  <Mail className="size-4 text-gold-400" aria-hidden="true" />
+                  {contact.email}
                 </a>
               </li>
               <li>
                 <a
-                  href={`tel:${t.contact.phone.replace(/\s/g, "")}`}
+                  href={`tel:${contact.phone.replace(/\s/g, "")}`}
                   className="inline-flex items-center gap-2.5 transition-colors hover:text-gold-300"
                 >
-                  <Phone className="size-4 text-gold-400" />
-                  {t.contact.phone}
+                  <Phone className="size-4 text-gold-400" aria-hidden="true" />
+                  {contact.phone}
                 </a>
               </li>
               <li className="inline-flex items-center gap-2.5">
-                <Globe className="size-4 text-gold-400" />
-                {t.contact.website}
+                <Globe className="size-4 text-gold-400" aria-hidden="true" />
+                {contact.website}
               </li>
               <li className="inline-flex items-center gap-2.5">
-                <MapPin className="size-4 text-gold-400" />
-                {t.contact.location}
+                <MapPin className="size-4 text-gold-400" aria-hidden="true" />
+                {contact.location}
               </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
-          <p className="text-xs text-muted-foreground">{t.footer.rights}</p>
+          <p className="text-xs text-muted-foreground">
+            {t.rights.replace("{year}", String(new Date().getFullYear()))}
+          </p>
           <div className="flex items-center gap-6">
-            {t.footer.legal.map((l) => (
+            {t.legal.map((l) => (
               <a
                 key={l.label}
                 href={l.href}
@@ -89,7 +89,7 @@ export function Footer() {
                 {l.label}
               </a>
             ))}
-            <span className="text-xs text-muted-foreground">{t.footer.madeIn}</span>
+            <span className="text-xs text-muted-foreground">{t.madeIn}</span>
           </div>
         </div>
       </Container>

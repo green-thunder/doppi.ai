@@ -1,48 +1,46 @@
-"use client";
-
-import { useCopy } from "@/lib/i18n";
-import {
-  Container,
-  Section,
-  SectionHeading,
-  Reveal,
-  GoldGlow,
-  InteractiveCard,
-  CountUp,
-} from "@/components/primitives";
+import { cn } from "@/lib/utils";
+import type { SiteCopy } from "@/lib/content";
+import { Container, Section, SectionHeading, GoldGlow } from "@/components/layout";
+import { Reveal, CountUp } from "@/components/primitives";
 import { AnimatedMedallion } from "@/components/decor";
 
-export function Results() {
-  const t = useCopy();
-
+/**
+ * Stats as one bordered panel with hairline dividers (gap-px over bg-border)
+ * instead of six identical hover-cards: numbers ARE the content here, so the
+ * card chrome added nothing — and the lead stat gets to be the focal point.
+ */
+export function Results({ t }: { t: SiteCopy["results"] }) {
   return (
-    <Section id="results" className="relative overflow-hidden">
+    <Section id="results" tone="raised" className="relative overflow-hidden">
       {/* Decorative layers */}
       <AnimatedMedallion className="-left-24 top-1/2 hidden h-[26rem] w-[26rem] -translate-y-1/2 text-gold-500/[0.07] lg:block" />
       <GoldGlow className="right-[-6rem] top-1/3 h-72 w-[32rem]" />
 
       <Container className="relative">
         <SectionHeading
-          eyebrow={t.results.eyebrow}
-          title={t.results.title}
-          subtitle={t.results.subtitle}
+          eyebrow={t.eyebrow}
+          title={t.title}
+          subtitle={t.subtitle}
           align="center"
         />
 
-        <ul className="mt-14 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3">
-          {t.results.stats.map((stat, i) => (
-            <Reveal key={stat.label} as="li" delayIndex={i}>
-              <InteractiveCard className="h-full p-6 text-center sm:p-8 sm:text-left">
+        <ul className="mt-12 grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-border bg-border sm:mt-16 min-[420px]:grid-cols-2 lg:grid-cols-3">
+          {t.stats.map((stat, i) => (
+            <li key={stat.label} className="bg-background">
+              <Reveal delayIndex={i} className="h-full p-6 text-center sm:p-8 sm:text-left">
                 <CountUp
                   as="p"
                   value={stat.value}
-                  className="font-display text-4xl font-bold leading-none tracking-tight text-gradient-gold sm:text-5xl"
+                  className={cn(
+                    "font-display font-bold leading-none tracking-tight text-gradient-gold",
+                    i === 0 ? "text-5xl sm:text-6xl" : "text-4xl sm:text-5xl",
+                  )}
                 />
-                <p className="mt-2 text-sm leading-snug text-muted-foreground">
+                <p className="mt-3 text-sm leading-snug text-muted-foreground">
                   {stat.label}
                 </p>
-              </InteractiveCard>
-            </Reveal>
+              </Reveal>
+            </li>
           ))}
         </ul>
       </Container>

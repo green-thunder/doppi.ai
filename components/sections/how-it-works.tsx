@@ -1,22 +1,12 @@
-"use client";
-
-import { motion, useReducedMotion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
-import { useCopy } from "@/lib/i18n";
-import {
-  Container,
-  Section,
-  SectionHeading,
-  Reveal,
-  GoldGlow,
-} from "@/components/primitives";
+import type { SiteCopy } from "@/lib/content";
+import { Container, Section, SectionHeading, GoldGlow } from "@/components/layout";
+import { Reveal } from "@/components/primitives";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/icons";
 
-export function HowItWorks() {
-  const t = useCopy();
-  const steps = t.how.steps;
-  const reduce = useReducedMotion();
+export function HowItWorks({ t }: { t: SiteCopy["how"] }) {
+  const steps = t.steps;
 
   return (
     <Section id="how" className="relative overflow-hidden">
@@ -28,27 +18,30 @@ export function HowItWorks() {
 
       <Container className="relative">
         <SectionHeading
-          eyebrow={t.how.eyebrow}
-          title={t.how.title}
-          subtitle={t.how.subtitle}
+          eyebrow={t.eyebrow}
+          title={t.title}
+          subtitle={t.subtitle}
           align="center"
         />
 
-        <ul className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-12 grid grid-cols-1 gap-4 sm:mt-16 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
           {steps.map((step, i) => {
             // Chevron hints the left-to-right flow between cards within a row on lg.
             const showConnector = (i + 1) % 4 !== 0 && i !== steps.length - 1;
             return (
               <Reveal as="li" key={step.title} delayIndex={i} className="relative">
-                <Card className="group relative h-full p-6 transition-transform duration-300 hover:-translate-y-1 motion-reduce:transform-none">
-                  {/* Faint left gold accent bar */}
+                <Card className="group relative h-full p-6 transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-1 hover:border-gold-500/40 hover:shadow-gold-sm motion-reduce:transform-none motion-reduce:hover:shadow-none">
+                  {/* Faint left gold accent bar — grows via transform, not height,
+                      so hover never triggers layout */}
                   <span
-                    className="absolute left-0 top-6 h-8 w-0.5 rounded bg-gold-500/40 transition-all duration-300 group-hover:h-12 group-hover:bg-gold-500/70"
+                    className="absolute left-0 top-6 h-8 w-0.5 origin-top rounded bg-gold-500/40 transition-[transform,background-color] duration-300 group-hover:scale-y-150 group-hover:bg-gold-500/70"
                     aria-hidden="true"
                   />
 
                   <div className="flex items-center">
-                    <span className="font-display text-sm font-semibold tabular-nums text-gold-400/70">
+                    {/* The 70% alpha reads as 2.83:1 on the ivory canvas; keep the muted
+                        tone on the dark canvas and go full opacity in light mode. */}
+                    <span className="font-display text-sm font-semibold tabular-nums text-gold-400/70 light:text-gold-400">
                       {String(i + 1).padStart(2, "0")}
                     </span>
                     <span className="ml-auto grid size-10 place-items-center rounded-xl bg-gold-500/10 text-gold-400 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3 motion-reduce:transform-none">
@@ -56,7 +49,7 @@ export function HowItWorks() {
                     </span>
                   </div>
 
-                  <h3 className="mt-4 font-display font-semibold text-foreground">
+                  <h3 className="mt-4 font-display text-lg font-semibold text-foreground">
                     {step.title}
                   </h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
@@ -64,26 +57,16 @@ export function HowItWorks() {
                   </p>
                 </Card>
 
+                {/* The connector rides the parent Reveal — it needs no animation
+                    of its own, which is the only thing that kept this whole
+                    section on the client. */}
                 {showConnector ? (
-                  reduce ? (
-                    <span
-                      className="pointer-events-none absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 text-gold-500/40 lg:block"
-                      aria-hidden="true"
-                    >
-                      <ChevronRight className="size-5" strokeWidth={1.75} />
-                    </span>
-                  ) : (
-                    <motion.span
-                      className="pointer-events-none absolute -right-3 top-1/2 z-10 hidden text-gold-500/40 lg:block"
-                      aria-hidden="true"
-                      initial={{ opacity: 0, x: -4, y: "-50%" }}
-                      whileInView={{ opacity: 1, x: 0, y: "-50%" }}
-                      viewport={{ once: true, margin: "-80px" }}
-                      transition={{ delay: i * 0.06 + 0.2, duration: 0.4 }}
-                    >
-                      <ChevronRight className="size-5" strokeWidth={1.75} />
-                    </motion.span>
-                  )
+                  <span
+                    className="pointer-events-none absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 text-gold-500/40 lg:block"
+                    aria-hidden="true"
+                  >
+                    <ChevronRight className="size-5" strokeWidth={1.75} />
+                  </span>
                 ) : null}
               </Reveal>
             );

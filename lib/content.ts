@@ -4,6 +4,10 @@
 
 export type Lang = "uz" | "en";
 
+/** Bump this whenever the copy below changes; app/sitemap.ts reports it as
+ *  lastModified for every URL. */
+export const LAST_UPDATED = "2026-08-19";
+
 export interface IconItem {
   icon: string; // lucide icon key, mapped in components
   title: string;
@@ -56,8 +60,19 @@ export interface TeamMember {
 }
 
 export interface SiteCopy {
-  langName: string; // label of the *other* language for the toggle
+  /** Per-language <title>/description. The page renders Uzbek by default, so its
+   *  metadata has to be Uzbek too — otherwise the only indexable page shares no
+   *  wording with what a local searcher actually types. */
+  seo: {
+    title: string;
+    description: string;
+    privacyTitle: string;
+    privacyDescription: string;
+    termsTitle: string;
+    termsDescription: string;
+  };
   a11y: {
+    skipToContent: string;
     mute: string;
     endCall: string;
     openMenu: string;
@@ -167,7 +182,11 @@ export interface SiteCopy {
       business: string;
       message: string;
       submit: string;
+      sending: string;
       privacy: string;
+      privacyLinkLabel: string;
+      errorTitle: string;
+      errorBody: string;
     };
     success: {
       title: string;
@@ -194,13 +213,24 @@ export interface SiteCopy {
 // UZBEK (default)
 // ---------------------------------------------------------------------------
 const uz: SiteCopy = {
-  langName: "EN",
+  seo: {
+    title: "Do'ppi.ai — O'zbekiston biznesi uchun AI marketing tizimi",
+    description:
+      "AI ovozli agent, ijtimoiy tarmoqlar avtomatizatsiyasi, AI video va kontent, CRM va chatbotlar — bitta tizimda. O'zbek tilida ishlaydi, O'zbekiston bozori uchun qurilgan.",
+    privacyTitle: "Maxfiylik siyosati",
+    privacyDescription:
+      "Do'ppi.ai saytga tashrif buyurganingizda yoki demo so'raganingizda qanday ma'lumot yig'ishi, undan qanday foydalanishi va uni qanday himoya qilishi.",
+    termsTitle: "Foydalanish shartlari",
+    termsDescription:
+      "Do'ppi.ai xizmatidan foydalanish shartlari — obuna, to'lov, javobgarlik va bekor qilish qoidalari.",
+  },
   a11y: {
+    skipToContent: "Asosiy qismga o'tish",
     mute: "Mikrofonni o'chirish",
     endCall: "Qo'ng'iroqni tugatish",
     openMenu: "Menyuni ochish",
     closeMenu: "Menyuni yopish",
-    switchLang: "Ingliz tiliga o'tish",
+    switchLang: "Til",
     lightMode: "Yorug' rejimga o'tish",
     darkMode: "Tungi rejimga o'tish",
   },
@@ -568,7 +598,12 @@ const uz: SiteCopy = {
       business: "Biznesingiz nomi",
       message: "Xabaringiz",
       submit: "Demo olish",
+      sending: "Yuborilmoqda…",
       privacy: "Yuborish orqali siz bilan bog'lanishimizga rozilik bildirasiz.",
+      privacyLinkLabel: "Maxfiylik siyosati",
+      errorTitle: "Xabar yuborilmadi",
+      errorBody:
+        "Texnik nosozlik yuz berdi. Iltimos, qayta urinib ko'ring yoki biz bilan to'g'ridan-to'g'ri bog'laning:",
     },
     success: {
       title: "Rahmat! So'rovingiz qabul qilindi.",
@@ -604,7 +639,7 @@ const uz: SiteCopy = {
       },
     ],
     contactTitle: "Aloqa",
-    rights: "© 2026 Do'ppi.ai. Barcha huquqlar himoyalangan.",
+    rights: "© {year} Do'ppi.ai. Barcha huquqlar himoyalangan.",
     madeIn: "Toshkentda mehr bilan yaratilgan",
     legal: [
       { label: "Maxfiylik siyosati", href: "/privacy" },
@@ -617,13 +652,24 @@ const uz: SiteCopy = {
 // ENGLISH
 // ---------------------------------------------------------------------------
 const en: SiteCopy = {
-  langName: "UZ",
+  seo: {
+    title: "Do'ppi.ai — The AI Marketing OS for Uzbekistan",
+    description:
+      "AI voice agent, social media automation, AI video & content, CRM and chatbots in one platform — built for businesses in Uzbekistan, in Uzbek.",
+    privacyTitle: "Privacy Policy",
+    privacyDescription:
+      "How Do'ppi.ai collects, uses and protects your information when you visit the site or request a demo.",
+    termsTitle: "Terms of Service",
+    termsDescription:
+      "The terms that govern your use of Do'ppi.ai — subscription, billing, liability and cancellation.",
+  },
   a11y: {
+    skipToContent: "Skip to content",
     mute: "Mute microphone",
     endCall: "End call",
     openMenu: "Open menu",
     closeMenu: "Close menu",
-    switchLang: "Switch to Uzbek",
+    switchLang: "Language",
     lightMode: "Switch to light mode",
     darkMode: "Switch to dark mode",
   },
@@ -991,7 +1037,12 @@ const en: SiteCopy = {
       business: "Business name",
       message: "Your message",
       submit: "Get a demo",
+      sending: "Sending…",
       privacy: "By submitting, you agree to let us contact you.",
+      privacyLinkLabel: "Privacy Policy",
+      errorTitle: "Message not sent",
+      errorBody:
+        "Something went wrong on our side. Please try again, or reach us directly:",
     },
     success: {
       title: "Thank you! Your request has been received.",
@@ -1027,11 +1078,11 @@ const en: SiteCopy = {
       },
     ],
     contactTitle: "Contact",
-    rights: "© 2026 Do'ppi.ai. All rights reserved.",
+    rights: "© {year} Do'ppi.ai. All rights reserved.",
     madeIn: "Made with care in Tashkent",
     legal: [
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
+      { label: "Privacy Policy", href: "/en/privacy" },
+      { label: "Terms of Service", href: "/en/terms" },
     ],
   },
 };

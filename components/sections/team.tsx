@@ -1,19 +1,10 @@
-"use client";
-
 import Image from "next/image";
-import { useCopy } from "@/lib/i18n";
-import {
-  Container,
-  Section,
-  SectionHeading,
-  Reveal,
-  GoldGlow,
-  InteractiveCard,
-} from "@/components/primitives";
+import type { SiteCopy } from "@/lib/content";
+import { Container, Section, SectionHeading, GoldGlow } from "@/components/layout";
+import { Reveal, InteractiveCard } from "@/components/primitives";
 import { Icon } from "@/components/icons";
 
-export function Team() {
-  const t = useCopy();
+export function Team({ t }: { t: SiteCopy["team"] }) {
 
   return (
     <Section id="team" className="relative overflow-hidden">
@@ -21,14 +12,14 @@ export function Team() {
 
       <Container className="relative">
         <SectionHeading
-          eyebrow={t.team.eyebrow}
-          title={t.team.title}
-          subtitle={t.team.subtitle}
+          eyebrow={t.eyebrow}
+          title={t.title}
+          subtitle={t.subtitle}
           align="center"
         />
 
-        <ul className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {t.team.members.map((member, i) => {
+        <ul className="mt-12 grid grid-cols-1 gap-4 sm:mt-16 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+          {t.members.map((member, i) => {
             // Only render socials that point somewhere real — placeholder "#"
             // entries would otherwise open a broken blank tab.
             const socials = member.socials?.filter((s) => s.href && s.href !== "#");
@@ -46,8 +37,9 @@ export function Team() {
                     <Image
                       src={member.image}
                       alt={member.name}
-                      width={160}
-                      height={160}
+                      width={96}
+                      height={96}
+                      quality={70}
                       className="size-20 rounded-full object-cover ring-2 ring-gold-500/20 transition-transform duration-300 group-hover:scale-105"
                     />
                   ) : (
@@ -78,7 +70,7 @@ export function Team() {
                           target="_blank"
                           rel="noreferrer"
                           aria-label={`${member.name} — ${s.label}`}
-                          className="grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-gold-500/40 hover:text-gold-300 motion-reduce:hover:translate-y-0"
+                          className="grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-[transform,color,border-color] duration-200 hover:-translate-y-0.5 hover:border-gold-500/40 hover:text-gold-300 motion-reduce:hover:translate-y-0"
                         >
                           <Icon name={s.icon} className="size-4" />
                         </a>

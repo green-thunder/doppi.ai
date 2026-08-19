@@ -14,10 +14,18 @@ const ThemeContext = React.createContext<ThemeContextValue | null>(null);
 
 const STORAGE_KEY = "doppi-theme";
 
+const THEME_COLOR: Record<Theme, string> = { dark: "#0A0A0B", light: "#FAF6EE" };
+
 /** Applies/removes the `.light` class on <html>. Dark is the default (no class). */
 function applyTheme(theme: Theme) {
   const el = document.documentElement;
   el.classList.toggle("light", theme === "light");
+  // Keep the browser chrome in step with the SITE theme. A static <meta> keyed
+  // off prefers-color-scheme paints dark chrome above a light page whenever the
+  // two disagree.
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", THEME_COLOR[theme]);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -29,6 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       ? "light"
       : "dark";
     setThemeState(initial);
+    applyTheme(initial);
   }, []);
 
   const setTheme = React.useCallback((t: Theme) => {
